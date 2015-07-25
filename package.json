@@ -18,15 +18,21 @@
     "camera-picking-ray": "^1.0.1",
     "canvas-fit": "^1.2.0",
     "canvas-orbit-camera": "^1.0.0",
+    "fc": "^1.4.3",
     "gl-context": "^0.1.1",
     "gl-geometry": "^1.0.0",
     "gl-mat4": "^1.0.0",
     "gl-shader": "^4.0.5",
     "gl-vec3": "^1.0.3",
     "glslify": "^2.2.1",
+    "key-pressed": "0.0.1",
+    "mouse-position": "^1.0.0",
+    "mouse-pressed": "0.0.1",
     "normals": "^0.1.0",
+    "orbit-camera": "^1.0.0",
     "primitive-quad": "^1.0.1",
     "primitive-sphere": "^2.0.0",
-    "ray-plane-intersection": "^1.0.0"
+    "ray-plane-intersection": "^1.0.0",
+    "scroll-speed": "^1.0.0"
   }
 }

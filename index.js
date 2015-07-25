@@ -21,22 +21,25 @@ var bunny = require('primitive-quad')();
 
 // Creates a canvas element and attaches
 // it to the <body> on your DOM.
-var canvas = document.body.appendChild(document.createElement('canvas'));
+//var canvas = document.body.appendChild(document.createElement('canvas'));
 
-// Creates an instance of canvas-orbit-camera,
-// which later will generate a view matrix and
-// handle interaction for you.
-var camera = require('canvas-orbit-camera')(canvas);
 
 // A small convenience function for creating
 // a new WebGL context – the `render` function
 // supplied here is called every frame to draw
 // to the screen.
-var gl = require('gl-context')(canvas, render);
+var gl = require('fc')(render, false, 3);
+
+// Creates an instance of canvas-orbit-camera,
+// which later will generate a view matrix and
+// handle interaction for you.
+console.log(gl)
+var camera = require('./camera')(gl.canvas, null, gl.dirty);
+
 
 // Resizes the <canvas> to fully fit the window
 // whenever the window is resized.
-window.addEventListener('resize', fit(canvas), false);
+// window.  addEventListener('resize', fit(canvas), false);
 
 // Load the bunny mesh data (a simplicial complex)
 // into a gl-geometry instance, calculating vertex
@@ -248,8 +251,8 @@ function projectMouseToPlane(event) {
   return intersect(out, ray.origin, ray.direction, planeNormal, -dot(planeNormal, [1, 0, 0]));
 }
 
-gl.canvas.addEventListener('click', handleMouseClick, true);
-gl.canvas.addEventListener('mousemove', handleMouseMove, true);
+window.addEventListener('click', handleMouseClick, true);
+window.addEventListener('mousemove', handleMouseMove, true);
 
 function handleMouseClick(event) {
   if (!drawMode) { return; }
@@ -257,6 +260,7 @@ function handleMouseClick(event) {
   var mouse3 = projectMouseToPlane(event);
 
   if (mouse3) {
+    gl.dirty();
     var length = sketch.positions.length;
     var last = sketch.cells[sketch.cells.length - 1];
     sketch.positions.push(mouse3);
@@ -271,6 +275,7 @@ function handleMouseMove (event) {
 
   var mouse3 = projectMouseToPlane(event);
   if (mouse3) {
+    gl.dirty();
     var last = sketch.positions[sketch.positions.length - 1];
     updateSketchGeometry(last, mouse3);
   }
