@@ -33,7 +33,7 @@ var gl = require('fc')(render, false, 3);
 // Creates an instance of canvas-orbit-camera,
 // which later will generate a view matrix and
 // handle interaction for you.
-console.log(gl)
+
 var camera = require('./camera')(gl.canvas, null, gl.dirty);
 
 
@@ -51,11 +51,8 @@ var camera = require('./camera')(gl.canvas, null, gl.dirty);
 // as arrays for simplicity and interoperability.
 var geometry = Geometry(gl);
 geometry.attr('aPosition', quad.positions);
-geometry.attr('aNormal', normals.vertexNormals(
-  quad.cells,    // [[1, 2, 3], [3, 4, 5]]
-  quad.positions // [[0, 0, 0], [1, 0, 0]]
-));
-
+geometry.attr('aUV', quad.uvs, { size: 2 });
+geometry.attr('aNormal', quad.normals);
 geometry.faces(quad.cells);
 
 // PSLG (Planar straight-line graphs)
@@ -99,6 +96,12 @@ var sketchShader = glShader(
   gl,
   glslify('./shaders/sketch.vert'),
   glslify('./shaders/sketch.frag')
+);
+
+var circleShader = glShader(
+  gl,
+  glslify('./shaders/circle.vert'),
+  glslify('./shaders/circle.frag')
 );
 
 // The logic/update loop, which updates all of the variables
@@ -163,18 +166,34 @@ function render() {
   // Finally: draws the quad to the screen! The rest is
   // handled in our shaders.
   geometry.draw(gl.TRIANGLES);
+  geometry.unbind();
 
-
-  sketchShader.bind();
-
-  // Binds the geometry and sets up the shader's attribute
-  // locations accordingly.
   sketchGeometry.bind(sketchShader);
   sketchShader.uniforms.uProjection = projection;
   sketchShader.uniforms.uView = view;
   sketchShader.uniforms.uModel = model;
   gl.lineWidth(2);
   sketchGeometry.draw(gl.LINES);
+
+
+
+  geometry.bind(circleShader);
+  sketch.positions.forEach(function(vec) {
+
+    // Updates our model/view/projection matrices, sending them
+    // to the GPU as uniform variables that we can use in
+    // `shaders/quad.vert` and `shaders/quad.frag`.
+    circleShader.uniforms.uProjection = projection;
+    circleShader.uniforms.uView = view;
+    circleShader.uniforms.uModel = model;
+    circleShader.uniforms.uTranslate = vec;
+
+    // Finally: draws the quad to the screen! The rest is
+    // handled in our shaders.
+    geometry.draw(gl.TRIANGLES);
+  });
+
+  geometry.unbind();
 }
 
 // function handleMouse (event) {
