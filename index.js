@@ -4,7 +4,7 @@ var glShader = require('gl-shader');
 var mat4     = require('gl-mat4');
 var normals  = require('normals');
 var glslify  = require('glslify');
-//var bunny    = require('bunny')
+//var quad    = require('quad')
 
 var dot = require('gl-vec3/dot');
 
@@ -13,11 +13,11 @@ var pick = require('camera-picking-ray');
 var intersect = require('ray-plane-intersection');
 
 //var radius = 1;
-// var bunny = require('primitive-sphere')(radius, {
+// var quad = require('primitive-sphere')(radius, {
 //   segments: 16
 // });
 
-var bunny = require('primitive-quad')();
+var quad = require('primitive-quad')();
 
 // Creates a canvas element and attaches
 // it to the <body> on your DOM.
@@ -41,7 +41,7 @@ var camera = require('./camera')(gl.canvas, null, gl.dirty);
 // whenever the window is resized.
 // window.  addEventListener('resize', fit(canvas), false);
 
-// Load the bunny mesh data (a simplicial complex)
+// Load the quad mesh data (a simplicial complex)
 // into a gl-geometry instance, calculating vertex
 // normals for you. A simplicial complex is simply
 // a list of vertices and faces – conventionally called
@@ -50,14 +50,13 @@ var camera = require('./camera')(gl.canvas, null, gl.dirty);
 // of `THREE.Vector3` and `THREE.Face3` instances, except specified
 // as arrays for simplicity and interoperability.
 var geometry = Geometry(gl);
-
-geometry.attr('aPosition', bunny.positions);
+geometry.attr('aPosition', quad.positions);
 geometry.attr('aNormal', normals.vertexNormals(
-  bunny.cells,    // [[1, 2, 3], [3, 4, 5]]
-  bunny.positions // [[0, 0, 0], [1, 0, 0]]
+  quad.cells,    // [[1, 2, 3], [3, 4, 5]]
+  quad.positions // [[0, 0, 0], [1, 0, 0]]
 ));
 
-geometry.faces(bunny.cells);
+geometry.faces(quad.cells);
 
 // PSLG (Planar straight-line graphs)
 // [[1, 2], [2, 3], [3, 1]]
@@ -69,12 +68,11 @@ var sketch = {
 };
 
 var sketchGeometry = Geometry(gl);
-
 sketchGeometry.attr('aPosition', sketch.positions);
 sketchGeometry.faces(sketch.cells, { size: 2 });
 
 // Create the base matrices to be used
-// when rendering the bunny. Alternatively, can
+// when rendering the quad. Alternatively, can
 // be created using `new Float32Array(16)`
 var projection = mat4.create();
 var model      = mat4.create();
@@ -93,8 +91,8 @@ var width;
 
 var drawPlaneShader = glShader(
   gl,
-  glslify('./shaders/bunny.vert'),
-  glslify('./shaders/bunny.frag')
+  glslify('./shaders/quad.vert'),
+  glslify('./shaders/quad.frag')
 );
 
 var sketchShader = glShader(
@@ -157,16 +155,14 @@ function render() {
 
   // Updates our model/view/projection matrices, sending them
   // to the GPU as uniform variables that we can use in
-  // `shaders/bunny.vert` and `shaders/bunny.frag`.
+  // `shaders/quad.vert` and `shaders/quad.frag`.
   drawPlaneShader.uniforms.uProjection = projection;
   drawPlaneShader.uniforms.uView = view;
   drawPlaneShader.uniforms.uModel = model;
 
-  // Finally: draws the bunny to the screen! The rest is
+  // Finally: draws the quad to the screen! The rest is
   // handled in our shaders.
   geometry.draw(gl.TRIANGLES);
-
-
 
 
   sketchShader.bind();
@@ -174,11 +170,6 @@ function render() {
   // Binds the geometry and sets up the shader's attribute
   // locations accordingly.
   sketchGeometry.bind(sketchShader);
-
-
-  // Updates our model/view/projection matrices, sending them
-  // to the GPU as uniform variables that we can use in
-  // `shaders/bunny.vert` and `shaders/bunny.frag`.
   sketchShader.uniforms.uProjection = projection;
   sketchShader.uniforms.uView = view;
   sketchShader.uniforms.uModel = model;
