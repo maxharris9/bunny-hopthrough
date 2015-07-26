@@ -15,7 +15,7 @@ uniform mat4 uProjection;
 uniform mat4 uModel;
 uniform mat4 uView;
 
-void main() {
+void main () {
   vNormal = aNormal;
 
   // - `uProjection` will apply our perspective matrix, and

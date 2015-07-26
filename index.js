@@ -1,54 +1,17 @@
 var Geometry = require('gl-geometry');
-var fit      = require('canvas-fit');
+var fit = require('canvas-fit');
 var glShader = require('gl-shader');
-var mat4     = require('gl-mat4');
-var normals  = require('normals');
-var glslify  = require('glslify');
-//var quad    = require('quad')
-
+var mat4 = require('gl-mat4');
+var normals = require('normals');
+var glslify = require('glslify');
 var dot = require('gl-vec3/dot');
-
 var pick = require('camera-picking-ray');
 //var intersect = require('ray-sphere-intersection');
 var intersect = require('ray-plane-intersection');
-
-//var radius = 1;
-// var quad = require('primitive-sphere')(radius, {
-//   segments: 16
-// });
-
 var quad = require('primitive-quad')();
-
-// Creates a canvas element and attaches
-// it to the <body> on your DOM.
-//var canvas = document.body.appendChild(document.createElement('canvas'));
-
-
-// A small convenience function for creating
-// a new WebGL context – the `render` function
-// supplied here is called every frame to draw
-// to the screen.
 var gl = require('fc')(render, false, 3);
-
-// Creates an instance of canvas-orbit-camera,
-// which later will generate a view matrix and
-// handle interaction for you.
-
 var camera = require('./camera')(gl.canvas, null, gl.dirty);
 
-
-// Resizes the <canvas> to fully fit the window
-// whenever the window is resized.
-// window.  addEventListener('resize', fit(canvas), false);
-
-// Load the quad mesh data (a simplicial complex)
-// into a gl-geometry instance, calculating vertex
-// normals for you. A simplicial complex is simply
-// a list of vertices and faces – conventionally called
-// `positions` and `cells` respectively. If you're familiar
-// with three.js, this is essentially equivalent to an array
-// of `THREE.Vector3` and `THREE.Face3` instances, except specified
-// as arrays for simplicity and interoperability.
 var geometry = Geometry(gl);
 geometry.attr('aPosition', quad.positions);
 geometry.attr('aUV', quad.uvs, { size: 2 });
@@ -107,9 +70,8 @@ var circleShader = glShader(
 // The logic/update loop, which updates all of the variables
 // before they're used in our render function. It's optional
 // for you to keep `update` and `render` as separate steps.
-function update() {
-  // Updates the width/height we use to render the
-  // final image.
+function update () {
+  // Updates the width/height we use to render the final image.
   width  = gl.drawingBufferWidth;
   height = gl.drawingBufferHeight;
 
@@ -137,7 +99,7 @@ function update() {
   );
 }
 
-function render() {
+function render () {
   update();
 
   // Sets the viewport, i.e. tells WebGL to draw the
@@ -172,14 +134,13 @@ function render() {
   sketchShader.uniforms.uProjection = projection;
   sketchShader.uniforms.uView = view;
   sketchShader.uniforms.uModel = model;
-  gl.lineWidth(2);
+  gl.lineWidth(1);
   sketchGeometry.draw(gl.LINES);
 
-
-
+  gl.enable(gl.BLEND)
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   geometry.bind(circleShader);
-  sketch.positions.forEach(function(vec) {
-
+  sketch.positions.forEach(function (vec) {
     // Updates our model/view/projection matrices, sending them
     // to the GPU as uniform variables that we can use in
     // `shaders/quad.vert` and `shaders/quad.frag`.
@@ -194,6 +155,7 @@ function render() {
   });
 
   geometry.unbind();
+  gl.disable(gl.BLEND);
 }
 
 // function handleMouse (event) {
@@ -223,7 +185,7 @@ function render() {
 //   }
 // }
 
-function updateSketchGeometry(position, mouse3) {
+function updateSketchGeometry (position, mouse3) {
 console.log('mouse3:', mouse3);
   position[0] = mouse3[0];
   position[1] = mouse3[1];
@@ -239,7 +201,7 @@ console.log('cells:', sketch.cells.join(';'), 'position length:', sketch.positio
   sketchGeometry.faces(sketch.cells, { size: 2 });
 }
 
-function projectMouseToPlane(event) {
+function projectMouseToPlane (event) {
   var out = [0, 0, 0];
 
   var ray = {
@@ -264,7 +226,7 @@ function projectMouseToPlane(event) {
 window.addEventListener('click', handleMouseClick, true);
 window.addEventListener('mousemove', handleMouseMove, true);
 
-function handleMouseClick(event) {
+function handleMouseClick (event) {
   if (!drawMode) { return; }
 
   var mouse3 = projectMouseToPlane(event);
