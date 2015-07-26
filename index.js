@@ -185,16 +185,6 @@ function render () {
 //   }
 // }
 
-function updateSketchGeometry () {
-  // TODO: this is a horrible hack!
-//sketchGeometry.dispose()
-  sketchGeometry._attributes.length = 0;
-  sketchGeometry._keys.length = 0;
-
-  sketchGeometry.attr('aPosition', sketch.positions);
-  sketchGeometry.faces(sketch.cells, { size: 2 });
-}
-
 function projectMouseToPlane (event) {
   var out = [0, 0, 0];
 
@@ -231,13 +221,6 @@ function handleMouseClick (event) {
   }
 }
 
-function addPoint (newPoint) {
-  var last = sketch.cells[sketch.cells.length - 1];
-
-  sketch.positions.push(newPoint);
-  sketch.cells.push([last[1], last[1] + 1]);
-}
-
 function handleMouseMove (event) {
   if (!drawMode) { return; }
 
@@ -247,7 +230,16 @@ function handleMouseMove (event) {
   }
 }
 
+function addPoint (newPoint) {
+  var last = sketch.cells[sketch.cells.length - 1];
+
+  sketch.positions.push(newPoint);
+  sketch.cells.push([last[1], last[1] + 1]);
+}
+
+var activePoint = 0;
 var drawMode = false;
+
 window.setDrawMode = function () {
   drawMode = !drawMode;
   console.log('setting drawMode:', drawMode);
@@ -267,6 +259,16 @@ function mutateAtIndex (index, value) {
 
   updateSketchGeometry();
   gl.dirty();
+}
+
+function updateSketchGeometry () {
+  // TODO: this is a horrible hack!
+//sketchGeometry.dispose()
+  sketchGeometry._attributes.length = 0;
+  sketchGeometry._keys.length = 0;
+
+  sketchGeometry.attr('aPosition', sketch.positions);
+  sketchGeometry.faces(sketch.cells, { size: 2 });
 }
 
 /*
