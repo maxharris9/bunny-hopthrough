@@ -185,15 +185,9 @@ function render () {
 //   }
 // }
 
-function updateSketchGeometry (position, mouse3) {
-//console.log('mouse3:', mouse3);
-  position[0] = mouse3[0];
-  position[1] = mouse3[1];
-  position[2] = mouse3[2];
-
-//console.log('cells:', sketch.cells.join(';'), 'position length:', sketch.positions.length);
+function updateSketchGeometry () {
   // TODO: this is a horrible hack!
-  //sketchGeometry.dispose()
+//sketchGeometry.dispose()
   sketchGeometry._attributes.length = 0;
   sketchGeometry._keys.length = 0;
 
@@ -235,7 +229,11 @@ function handleMouseClick (event) {
     gl.dirty();
     var length = sketch.positions.length;
     addPoint(mouse3);
-    console.log(sketch);
+
+    sketch.positions[length - 1][0] = mouse3[0];
+    sketch.positions[length - 1][1] = mouse3[1];
+    sketch.positions[length - 1][2] = mouse3[2];
+
     updateSketchGeometry(sketch.positions[length - 1], mouse3);
   }
 }
@@ -247,18 +245,19 @@ function addPoint (newPoint) {
   sketch.cells.push([last[1], last[1] + 1]);
 }
 
-function skookum (chooch) {
-  var last = sketch.positions[sketch.positions.length - 1];
-  updateSketchGeometry(last, chooch);
-  gl.dirty();
-}
-
 function handleMouseMove (event) {
   if (!drawMode) { return; }
 
   var mouse3 = projectMouseToPlane(event);
   if (mouse3) {
-    skookum(mouse3);
+    var last = sketch.positions[sketch.positions.length - 1];
+
+    last[0] = mouse3[0];
+    last[1] = mouse3[1];
+    last[2] = mouse3[2];
+
+    updateSketchGeometry();
+    gl.dirty();
   }
 }
 
@@ -270,7 +269,8 @@ window.setDrawMode = function () {
 
 window.closePath = function () {
   addPoint(sketch.positions[0]);
-  skookum(sketch.positions[sketch.positions.length - 1]);
+  updateSketchGeometry();
+  gl.dirty();
 }
 
 /*
