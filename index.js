@@ -226,15 +226,8 @@ function handleMouseClick (event) {
   var mouse3 = projectMouseToPlane(event);
 
   if (mouse3) {
-    gl.dirty();
-    var length = sketch.positions.length;
     addPoint(mouse3);
-
-    sketch.positions[length - 1][0] = mouse3[0];
-    sketch.positions[length - 1][1] = mouse3[1];
-    sketch.positions[length - 1][2] = mouse3[2];
-
-    updateSketchGeometry(sketch.positions[length - 1], mouse3);
+    mutateAtIndex(sketch.positions.length - 1, mouse3);
   }
 }
 
@@ -250,14 +243,7 @@ function handleMouseMove (event) {
 
   var mouse3 = projectMouseToPlane(event);
   if (mouse3) {
-    var last = sketch.positions[sketch.positions.length - 1];
-
-    last[0] = mouse3[0];
-    last[1] = mouse3[1];
-    last[2] = mouse3[2];
-
-    updateSketchGeometry();
-    gl.dirty();
+    mutateAtIndex(sketch.positions.length - 1, mouse3);
   }
 }
 
@@ -269,6 +255,16 @@ window.setDrawMode = function () {
 
 window.closePath = function () {
   addPoint(sketch.positions[0]);
+  updateSketchGeometry();
+  gl.dirty();
+}
+
+function mutateAtIndex (index, value) {
+  var item = sketch.positions[index];
+  item[0] = value[0];
+  item[1] = value[1];
+  item[2] = value[2];
+
   updateSketchGeometry();
   gl.dirty();
 }
