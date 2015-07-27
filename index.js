@@ -13,6 +13,8 @@ var gl = require('fc')(render, false, 3);
 var camera = require('./camera')(gl.canvas, null, gl.dirty);
 var distance = require('gl-vec3/distance');
 
+var findStartingIndexes = require('./pslg');
+
 var geometry = Geometry(gl);
 geometry.attr('aPosition', quad.positions);
 geometry.attr('aUV', quad.uvs, { size: 2 });
@@ -286,9 +288,21 @@ window.setTweakMode = function () {
 };
 
 window.closePath = function () {
-  addPoint(sketch.positions[0]);
-  updateSketchGeometry();
-  gl.dirty();
+  // walk backwards through the pslg to find the
+  // nearest point that isn't attached to anything
+  //
+  // [0, 1] -> [1, 2]    [3, 4] -> [4, 5] -> [5, 6]
+  //                      ^                      |
+  //                      |                      |
+  //                      .------- [6, 3] <------.
+
+  var indexes = findStartingIndexes(sketch.cells, 2);
+  if (indexes.length > 0) {
+    var last = sketch.cells[indexes[0]];
+    sketch.cells.push([last[1], 0]);
+    updateSketchGeometry();
+    gl.dirty();
+  }
 };
 
 function mutateAtIndex (index, value) {
