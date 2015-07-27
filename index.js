@@ -185,7 +185,8 @@ function projectMouseToPlane (event) {
   return intersect(out, ray.origin, ray.direction, planeNormal, -dot(planeNormal, [1, 0, 0]));
 }
 
-window.addEventListener('click', handleMouseClick, true);
+window.addEventListener('mousedown', handleMouseDown, true);
+window.addEventListener('mouseup', handleMouseUp, true);
 window.addEventListener('mousemove', handleMouseMove, true);
 
 function findNearestPoint (point) {
@@ -205,32 +206,64 @@ function findNearestPoint (point) {
   return result;
 }
 
-function handleMouseClick (event) {
+function handleMouseDown (event) {
   var selectionPointRadius = 0.1;
 
   var mouse3 = projectMouseToPlane(event);
 
-  if (drawMode) {
-    if (mouse3) {
-      addPoint(mouse3);
-      mutateAtIndex(sketch.positions.length - 1, mouse3);
-    }
-  }
-  else {
-    var nearestPoint = findNearestPoint(mouse3);
+  switch (mode) {
+    case 'DRAW':
+      if (mouse3) {
+        addPoint(mouse3);
+        mutateAtIndex(sketch.positions.length - 1, mouse3);
+      }
+    break;
 
-    if (nearestPoint.distance < selectionPointRadius) {
-      // change the color of the point here
-      console.log('you clicked on:', nearestPoint);
-      activePoint = nearestPoint.nearestPointIndex;
-    }
+    case 'TWEAK':
+    default:
+      var nearestPoint = findNearestPoint(mouse3);
+
+      if (nearestPoint.distance < selectionPointRadius) {
+        activePoint = nearestPoint.nearestPointIndex;
+        mode = 'POINTMOVING';
+      }
+    break;
+  }
+}
+
+function handleMouseUp (event) {
+  switch (mode) {
+    case 'POINTMOVING':
+      mode = 'TWEAK';
+    break;
+
+    default:
+    break;
   }
 }
 
 function handleMouseMove (event) {
   var mouse3 = projectMouseToPlane(event);
-  if (drawMode && mouse3) {
-    mutateAtIndex(sketch.positions.length - 1, mouse3);
+  switch (mode) {
+    case 'DRAW':
+      if (mouse3) {
+        mutateAtIndex(sketch.positions.length - 1, mouse3);
+      }
+    break;
+
+    case 'POINTMOVING':
+      if (mouse3) {
+        mutateAtIndex(activePoint, mouse3);
+        event.stopPropagation();
+      }
+    break;
+
+    case 'TWEAK':
+    break;
+
+    default:
+      console.log('mode not handled:', mode);
+    break;
   }
 }
 
@@ -242,16 +275,14 @@ function addPoint (newPoint) {
 }
 
 var activePoint = 0;
-var drawMode = false;
-var movablePointMode = false;
+var mode = 'NONE';
 
 window.setDrawMode = function () {
-  drawMode = !drawMode;
-  console.log('setting drawMode:', drawMode);
+  mode = 'DRAW';
 };
 
-window.setMovablePointMode = function () {
-  movablePointMode = !movablePointMode;
+window.setTweakMode = function () {
+  mode = 'TWEAK';
 };
 
 window.closePath = function () {
