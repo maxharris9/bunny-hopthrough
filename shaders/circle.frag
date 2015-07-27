@@ -1,10 +1,10 @@
 precision mediump float;
 varying vec2 uv;
+uniform vec4 color1;
 
 void main () {
   float border = 0.01;
   float radius = 0.5;
-  vec4 color1 = vec4(0.0, 0.0, 0.0, 1.0);
   vec4 color0 = vec4(0.0, 0.0, 0.0, 0.0);
 
   vec2 m = uv - vec2(0.5, 0.5);

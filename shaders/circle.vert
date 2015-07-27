@@ -10,6 +10,8 @@ uniform mat4 uView;
 uniform vec3 uTranslate;
 varying vec2 uv;
 
+uniform vec4 color1;
+
 void main () {
   gl_Position = uProjection * uView * uModel * vec4(aPosition * .1 + uTranslate, 1.0);
   uv = aUV;

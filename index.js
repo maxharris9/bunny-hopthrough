@@ -1,8 +1,8 @@
 var Geometry = require('gl-geometry');
-var fit = require('canvas-fit');
+//var fit = require('canvas-fit');
 var glShader = require('gl-shader');
 var mat4 = require('gl-mat4');
-var normals = require('normals');
+//var normals = require('normals');
 var glslify = require('glslify');
 var dot = require('gl-vec3/dot');
 var pick = require('camera-picking-ray');
@@ -11,6 +11,7 @@ var intersect = require('ray-plane-intersection');
 var quad = require('primitive-quad')();
 var gl = require('fc')(render, false, 3);
 var camera = require('./camera')(gl.canvas, null, gl.dirty);
+var distance = require('gl-vec3/distance');
 
 var geometry = Geometry(gl);
 geometry.attr('aPosition', quad.positions);
@@ -19,8 +20,8 @@ geometry.attr('aNormal', quad.normals);
 geometry.faces(quad.cells);
 
 // PSLG (Planar straight-line graphs)
-// [[1, 2], [2, 3], [3, 1]]
 // [0, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1]
+// [[1, 2], [2, 3], [3, 1]]
 
 var sketch = {
   positions: [[-1, -1, 0], [1, 1, 0]],
@@ -137,10 +138,13 @@ function render () {
   gl.lineWidth(1);
   sketchGeometry.draw(gl.LINES);
 
-  gl.enable(gl.BLEND)
+  gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
   geometry.bind(circleShader);
-  sketch.positions.forEach(function (vec) {
+
+  for (var i = 0 ; i < sketch.positions.length; i++) {
+    var vec = sketch.positions[i];
     // Updates our model/view/projection matrices, sending them
     // to the GPU as uniform variables that we can use in
     // `shaders/quad.vert` and `shaders/quad.frag`.
@@ -148,42 +152,16 @@ function render () {
     circleShader.uniforms.uView = view;
     circleShader.uniforms.uModel = model;
     circleShader.uniforms.uTranslate = vec;
+    circleShader.uniforms.color1 = (activePoint === i) ? [1.0, 0.6, 0.2, 1.0] : [0.0, 0.0, 0.0, 1.0];
 
     // Finally: draws the quad to the screen! The rest is
     // handled in our shaders.
     geometry.draw(gl.TRIANGLES);
-  });
+  }
 
   geometry.unbind();
   gl.disable(gl.BLEND);
 }
-
-// function handleMouse (event) {
-//   //console.log('click', event.x, event.y);
-
-//   var ray = {
-//     origin: [0, 0, 0],
-//     direction: [0, 0, 0]
-//   };
-
-//   var mouse = [event.x, event.y];
-//   var viewport = [0, 0, width, height];
-
-//   var projView = mat4.multiply([], projection, view)
-//   var invProjView = mat4.invert([], projView);
-
-//   pick(ray.origin, ray.direction, mouse, viewport, invProjView);
-
-
-//   var center = [0, 0, 0];
-//   var hit = intersect([], ray.origin, ray.direction, center, radius);
-
-//   if (hit) {
-// console.log(' dir:', ray.direction);
-// console.log('orig:', ray.origin);
-//     console.log('sphere hit:', hit);
-//   }
-// }
 
 function projectMouseToPlane (event) {
   var out = [0, 0, 0];
@@ -210,22 +188,48 @@ function projectMouseToPlane (event) {
 window.addEventListener('click', handleMouseClick, true);
 window.addEventListener('mousemove', handleMouseMove, true);
 
+function findNearestPoint (point) {
+  var result = {
+    nearestPointIndex: 0,
+    distance: undefined
+  };
+
+  for (var i = 0; i < sketch.positions.length; i++) {
+    var dist = distance(point, sketch.positions[i]);
+    if ((0 === i) || (dist < result.distance)) {
+      result.distance = dist;
+      result.nearestPointIndex = i;
+    }
+  }
+
+  return result;
+}
+
 function handleMouseClick (event) {
-  if (!drawMode) { return; }
+  var selectionPointRadius = 0.1;
 
   var mouse3 = projectMouseToPlane(event);
 
-  if (mouse3) {
-    addPoint(mouse3);
-    mutateAtIndex(sketch.positions.length - 1, mouse3);
+  if (drawMode) {
+    if (mouse3) {
+      addPoint(mouse3);
+      mutateAtIndex(sketch.positions.length - 1, mouse3);
+    }
+  }
+  else {
+    var nearestPoint = findNearestPoint(mouse3);
+
+    if (nearestPoint.distance < selectionPointRadius) {
+      // change the color of the point here
+      console.log('you clicked on:', nearestPoint);
+      activePoint = nearestPoint.nearestPointIndex;
+    }
   }
 }
 
 function handleMouseMove (event) {
-  if (!drawMode) { return; }
-
   var mouse3 = projectMouseToPlane(event);
-  if (mouse3) {
+  if (drawMode && mouse3) {
     mutateAtIndex(sketch.positions.length - 1, mouse3);
   }
 }
@@ -239,17 +243,22 @@ function addPoint (newPoint) {
 
 var activePoint = 0;
 var drawMode = false;
+var movablePointMode = false;
 
 window.setDrawMode = function () {
   drawMode = !drawMode;
   console.log('setting drawMode:', drawMode);
 };
 
+window.setMovablePointMode = function () {
+  movablePointMode = !movablePointMode;
+};
+
 window.closePath = function () {
   addPoint(sketch.positions[0]);
   updateSketchGeometry();
   gl.dirty();
-}
+};
 
 function mutateAtIndex (index, value) {
   var item = sketch.positions[index];
