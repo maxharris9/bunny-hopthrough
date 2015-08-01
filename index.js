@@ -11,9 +11,10 @@ var intersect = require('ray-plane-intersection');
 var quad = require('primitive-quad')();
 var gl = require('fc')(render, false, 3);
 var camera = require('./camera')(gl.canvas, null, gl.dirty);
-var distance = require('gl-vec3/distance');
 
 var findStartingIndexes = require('./pslg');
+
+var Loops = require('./loops');
 
 var geometry = Geometry(gl);
 geometry.attr('aPosition', quad.positions);
@@ -25,10 +26,23 @@ geometry.faces(quad.cells);
 // [0, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1]
 // [[1, 2], [2, 3], [3, 1]]
 
-var sketch = {
-  positions: [[-1, -1, 0], [1, 1, 0]],
-  cells: [[0, 1]]
-};
+// var sketch = {
+//   positions: [[-1, -1, 0], [1, 1, 0], [1, -1, 0]],
+//   cells: [[0, 1]]
+// };
+
+var loops = new Loops();
+
+loops.addPoint([-1, -1, 0]);
+loops.addPoint([ 1,  1, 0]);
+
+var activeLoop = loops.newLoop(); // TODO: internalize activeLoop state into the Loops object
+loops.addEdge(activeLoop, 0, 1); // create a new loop, connect the first two points
+
+loops.growLoop(activeLoop, [1, -1, 0]);
+loops.closeLoop(activeLoop);
+
+var sketch = loops.toPslg();
 
 var sketchGeometry = Geometry(gl);
 sketchGeometry.attr('aPosition', sketch.positions);
@@ -191,39 +205,50 @@ window.addEventListener('mousedown', handleMouseDown, true);
 window.addEventListener('mouseup', handleMouseUp, true);
 window.addEventListener('mousemove', handleMouseMove, true);
 
-function findNearestPoint (point) {
-  var result = {
-    nearestPointIndex: 0,
-    distance: undefined
-  };
 
-  for (var i = 0; i < sketch.positions.length; i++) {
-    var dist = distance(point, sketch.positions[i]);
-    if ((0 === i) || (dist < result.distance)) {
-      result.distance = dist;
-      result.nearestPointIndex = i;
-    }
-  }
-
-  return result;
-}
+var firstEdgeMode = false; // fuck this is a nasty hair! TODO: fix!
+var firstEdgeModeIndex0 = 0; // so is this
 
 function handleMouseDown (event) {
   var selectionPointRadius = 0.1;
 
   var mouse3 = projectMouseToPlane(event);
 
+
+
   switch (mode) {
     case 'DRAW':
       if (mouse3) {
-        addPoint(mouse3);
-        mutateAtIndex(sketch.positions.length - 1, mouse3);
+console.log('activeLoop:', activeLoop);
+
+var firstEdgeModeIndex1 = loops.addPoint(mouse3);
+activePoint = firstEdgeModeIndex1;
+
+if (firstEdgeMode) {
+  loops.addEdge(activeLoop, firstEdgeModeIndex0, firstEdgeModeIndex1);
+  firstEdgeMode = false;
+}
+else {
+  loops.growLoop(activeLoop, mouse3);
+}
+        updateSketchGeometry();
+        gl.dirty();
+      }
+    break;
+
+    case 'NEWLOOP':
+      if (mouse3) {
+        activeLoop = loops.newLoop();
+firstEdgeModeIndex0 = loops.addPoint(mouse3);
+activePoint = firstEdgeModeIndex0;
+firstEdgeMode = true;
+        mode = 'NONE';
       }
     break;
 
     case 'TWEAK':
     default:
-      var nearestPoint = findNearestPoint(mouse3);
+      var nearestPoint = loops.findNearestPoint(mouse3);
 
       if (nearestPoint.distance < selectionPointRadius) {
         activePoint = nearestPoint.nearestPointIndex;
@@ -249,13 +274,20 @@ function handleMouseMove (event) {
   switch (mode) {
     case 'DRAW':
       if (mouse3) {
-        mutateAtIndex(sketch.positions.length - 1, mouse3);
+        loops.mutatePoint(activePoint, mouse3);
+
+        updateSketchGeometry();
+        gl.dirty();
       }
     break;
 
     case 'POINTMOVING':
       if (mouse3) {
-        mutateAtIndex(activePoint, mouse3);
+        loops.mutatePoint(activePoint, mouse3);
+
+        updateSketchGeometry();
+        gl.dirty();
+
         event.stopPropagation();
       }
     break;
@@ -269,14 +301,8 @@ function handleMouseMove (event) {
   }
 }
 
-function addPoint (newPoint) {
-  var last = sketch.cells[sketch.cells.length - 1];
-
-  sketch.positions.push(newPoint);
-  sketch.cells.push([last[1], last[1] + 1]);
-}
-
 var activePoint = 0;
+
 var mode = 'NONE';
 
 window.setDrawMode = function () {
@@ -287,35 +313,23 @@ window.setTweakMode = function () {
   mode = 'TWEAK';
 };
 
+window.setNewLoopMode = function () {
+  mode = 'NEWLOOP';
+}
+
+window.sketch = sketch;
+
 window.closePath = function () {
-  // walk backwards through the pslg to find the
-  // nearest point that isn't attached to anything
-  //
-  // [0, 1] -> [1, 2]    [3, 4] -> [4, 5] -> [5, 6]
-  //                      ^                      |
-  //                      |                      |
-  //                      .------- [6, 3] <------.
-
-  var indexes = findStartingIndexes(sketch.cells, 2);
-  if (indexes.length > 0) {
-    var last = sketch.cells[indexes[0]];
-    sketch.cells.push([last[1], 0]);
-    updateSketchGeometry();
-    gl.dirty();
-  }
-};
-
-function mutateAtIndex (index, value) {
-  var item = sketch.positions[index];
-  item[0] = value[0];
-  item[1] = value[1];
-  item[2] = value[2];
+  loops.closeLoop(activeLoop);
 
   updateSketchGeometry();
   gl.dirty();
-}
+};
 
 function updateSketchGeometry () {
+  // TODO: render more directly, without converting to PSLG first?
+  sketch = loops.toPslg();
+
   // TODO: this is a horrible hack!
 //sketchGeometry.dispose()
   sketchGeometry._attributes.length = 0;
