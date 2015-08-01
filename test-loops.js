@@ -7,11 +7,11 @@ test('basic success test', function (t) {
   loops.addPoint([0, 0, 0]);
   loops.addPoint([0, 1, 0]);
 
-  var currentLoop = loops.newLoop();
-  loops.addEdge(currentLoop, 0, 1); // create a new loop, connect the first two points
+  loops.newLoop();
+  loops.addEdge(0, 1); // create a new loop, connect the first two points
 
-  loops.growLoop(currentLoop, [1, 1, 0]);
-  loops.closeLoop(currentLoop);
+  loops.growLoop([1, 1, 0]);
+  loops.closeLoop();
 
   var output = loops.toPslg();
 

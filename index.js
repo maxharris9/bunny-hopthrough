@@ -33,11 +33,11 @@ var loops = new Loops();
 loops.addPoint([-1, -1, 0]);
 loops.addPoint([ 1,  1, 0]);
 
-var activeLoop = loops.newLoop(); // TODO: internalize activeLoop state into the Loops object
-loops.addEdge(activeLoop, 0, 1); // create a new loop, connect the first two points
+loops.newLoop();
+loops.addEdge(0, 1); // connect the first two points
 
-loops.growLoop(activeLoop, [1, -1, 0]);
-loops.closeLoop(activeLoop);
+loops.growLoop([1, -1, 0]);
+loops.closeLoop();
 
 var sketch = loops.toPslg();
 
@@ -222,11 +222,11 @@ var firstEdgeModeIndex1 = loops.addPoint(mouse3);
 activePoint = firstEdgeModeIndex1;
 
 if (firstEdgeMode) {
-  loops.addEdge(activeLoop, firstEdgeModeIndex0, firstEdgeModeIndex1);
+  loops.addEdge(firstEdgeModeIndex0, firstEdgeModeIndex1);
   firstEdgeMode = false;
 }
 else {
-  loops.growLoop(activeLoop, mouse3);
+  loops.growLoop(mouse3);
 }
         updateSketchGeometry();
         gl.dirty();
@@ -235,7 +235,7 @@ else {
 
     case 'NEWLOOP':
       if (mouse3) {
-        activeLoop = loops.newLoop();
+        loops.newLoop();
 firstEdgeModeIndex0 = loops.addPoint(mouse3);
 activePoint = firstEdgeModeIndex0;
 firstEdgeMode = true;
@@ -315,9 +315,10 @@ window.setNewLoopMode = function () {
 }
 
 window.sketch = sketch;
+window.loops = loops;
 
 window.closePath = function () {
-  loops.closeLoop(activeLoop);
+  loops.closeLoop();
 
   updateSketchGeometry();
   gl.dirty();

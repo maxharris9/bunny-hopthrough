@@ -3,17 +3,21 @@ var distance = require('gl-vec3/distance');
 function Loops () {
   this.loops = []; // contains an array of loop arrays. i.e., [ [[0, 1], [1, 2], [2, 0]], [[3, 4], [5, 6]] ]
   this.points = []; // just a big array of points. i.e., [0, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1]
+
+  this.activeLoop = 0;
+  this.activePoint = 0;
 }
 
 Loops.prototype.newLoop = function () {
   this.loops.push([]);
 
-  return this.loops.length - 1; // use this index to feed into whichLoop in subsequent calls
+  this.activeLoop = this.loops.length - 1;
 };
 
-Loops.prototype.addEdge = function (whichLoop, edgeStartIndex, edgeEndIndex) {
-  if (this.loops[whichLoop]) {
-    this.loops[whichLoop].push([edgeStartIndex, edgeEndIndex]);
+Loops.prototype.addEdge = function (edgeStartIndex, edgeEndIndex) {
+  var l = this.loops[this.activeLoop];
+  if (l) {
+    l.push([edgeStartIndex, edgeEndIndex]);
   }
 };
 
@@ -24,10 +28,10 @@ Loops.prototype.addPoint = function (point) {
   return this.points.length - 1; // TODO: return actual point position if not adding new point
 };
 
-Loops.prototype.growLoop = function (whichLoop, point) {
+Loops.prototype.growLoop = function (point) {
   var newPointIndex = this.addPoint(point);
 
-  var x = this.loops[whichLoop];
+  var x = this.loops[this.activeLoop];
 
   if (x.length > 0) {
     var lastCell = x[x.length - 1];
@@ -38,14 +42,14 @@ Loops.prototype.growLoop = function (whichLoop, point) {
   }
 };
 
-Loops.prototype.closeLoop = function (whichLoop) {
+Loops.prototype.closeLoop = function () {
   // loops should not have any gaps between the indexes,
   // so all we need to do is add a cell containing the largest and smallest indexes
 
   var largest = Number.NEGATIVE_INFINITY;
   var smallest = Number.POSITIVE_INFINITY;
 
-  var item = this.loops[whichLoop];
+  var item = this.loops[this.activeLoop];
 
   for (var i = 0; i < item.length; i++) {
     for (var j = 0; j < item[i].length; j++) {
@@ -56,7 +60,7 @@ Loops.prototype.closeLoop = function (whichLoop) {
     }
   }
 
-  this.addEdge(whichLoop, smallest, largest);
+  this.addEdge(smallest, largest);
 };
 
 Loops.prototype.mutatePoint = function (index, value) {
