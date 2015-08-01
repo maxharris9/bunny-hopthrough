@@ -8,7 +8,7 @@ var intersect = require('ray-plane-intersection');
 var quad = require('primitive-quad')();
 var gl = require('fc')(render, false, 3);
 var camera = require('./camera')(gl.canvas, null, gl.dirty);
-var Loops = require('./loops');
+var Paths = require('./paths');
 
 var geometry = Geometry(gl);
 geometry.attr('aPosition', quad.positions);
@@ -19,19 +19,19 @@ geometry.faces(quad.cells);
 // turn on webgl extensions
 gl.getExtension('OES_standard_derivatives');
 
-var loops = initSampleLoops();
+var paths = initSamplePaths();
 
-function initSampleLoops () {
-  var l = new Loops();
+function initSamplePaths () {
+  var l = new Paths();
 
   l.addPoint([-1, -1, 0]);
   l.addPoint([ 1,  1, 0]);
 
-  l.newLoop();
+  l.newPath();
   l.addEdge(0, 1); // connect the first two points
 
-  l.growLoop([1, -1, 0]);
-  l.closeLoop();
+  l.growPath([1, -1, 0]);
+  l.closePath();
 
   return l;
 }
@@ -135,7 +135,7 @@ function render () {
   geometry.draw(gl.TRIANGLES);
   geometry.unbind();
 
-  loops.render(sketchShader, circleShader, geometry, gl, projection, view, model, activePoint);
+  paths.render(sketchShader, circleShader, geometry, gl, projection, view, model, activePoint);
 
   geometry.unbind();
   gl.disable(gl.BLEND);
@@ -178,15 +178,15 @@ function handleMouseDown (event) {
   switch (mode) {
     case 'DRAW':
       if (mouse3) {
-var firstEdgeModeIndex1 = loops.addPoint(mouse3);
+var firstEdgeModeIndex1 = paths.addPoint(mouse3);
 activePoint = firstEdgeModeIndex1;
 
 if (firstEdgeMode) {
-  loops.addEdge(firstEdgeModeIndex0, firstEdgeModeIndex1);
+  paths.addEdge(firstEdgeModeIndex0, firstEdgeModeIndex1);
   firstEdgeMode = false;
 }
 else {
-  loops.growLoop(mouse3);
+  paths.growPath(mouse3);
 }
         gl.dirty();
       }
@@ -194,8 +194,8 @@ else {
 
     case 'NEWLOOP':
       if (mouse3) {
-        loops.newLoop();
-firstEdgeModeIndex0 = loops.addPoint(mouse3);
+        paths.newPath();
+firstEdgeModeIndex0 = paths.addPoint(mouse3);
 activePoint = firstEdgeModeIndex0;
 firstEdgeMode = true;
         mode = 'NONE';
@@ -204,7 +204,7 @@ firstEdgeMode = true;
 
     case 'TWEAK': // jshint ignore:line
     default:
-      var nearestPoint = loops.findNearestPoint(mouse3);
+      var nearestPoint = paths.findNearestPoint(mouse3);
 
       if (nearestPoint.distance < selectionPointRadius) {
         activePoint = nearestPoint.nearestPointIndex;
@@ -230,14 +230,14 @@ function handleMouseMove (event) {
   switch (mode) {
     case 'DRAW':
       if (mouse3) {
-        loops.mutatePoint(activePoint, mouse3);
+        paths.mutatePoint(activePoint, mouse3);
         gl.dirty();
       }
     break;
 
     case 'POINTMOVING':
       if (mouse3) {
-        loops.mutatePoint(activePoint, mouse3);
+        paths.mutatePoint(activePoint, mouse3);
         gl.dirty();
         event.stopPropagation();
       }
@@ -263,12 +263,12 @@ window.setTweakMode = function () {
   mode = 'TWEAK';
 };
 
-window.setNewLoopMode = function () {
+window.setNewPathMode = function () {
   mode = 'NEWLOOP';
 };
 
 window.closePath = function () {
-  loops.closeLoop();
+  paths.closePath();
 
   gl.dirty();
 };

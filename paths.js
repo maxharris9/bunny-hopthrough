@@ -1,38 +1,38 @@
 var distance = require('gl-vec3/distance');
 var Geometry = require('gl-geometry');
 
-function Loops () {
+function Paths () {
   this.loops = []; // contains an array of loop arrays. i.e., [ [[0, 1], [1, 2], [2, 0]], [[3, 4], [5, 6]] ]
   this.points = []; // just a big array of points. i.e., [0, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1]
 
-  this.activeLoop = 0;
+  this.activePath = 0;
   this.activePoint = 0;
 }
 
-Loops.prototype.newLoop = function () {
+Paths.prototype.newPath = function () {
   this.loops.push([]);
 
-  this.activeLoop = this.loops.length - 1;
+  this.activePath = this.loops.length - 1;
 };
 
-Loops.prototype.addEdge = function (edgeStartIndex, edgeEndIndex) {
-  var l = this.loops[this.activeLoop];
+Paths.prototype.addEdge = function (edgeStartIndex, edgeEndIndex) {
+  var l = this.loops[this.activePath];
   if (l) {
     l.push([edgeStartIndex, edgeEndIndex]);
   }
 };
 
-Loops.prototype.addPoint = function (point) {
+Paths.prototype.addPoint = function (point) {
   // TODO: only push unique points
   this.points.push(point);
 
   return this.points.length - 1; // TODO: return actual point position if not adding new point
 };
 
-Loops.prototype.growLoop = function (point) {
+Paths.prototype.growPath = function (point) {
   var newPointIndex = this.addPoint(point);
 
-  var x = this.loops[this.activeLoop];
+  var x = this.loops[this.activePath];
 
   if (x.length > 0) {
     var lastCell = x[x.length - 1];
@@ -43,14 +43,14 @@ Loops.prototype.growLoop = function (point) {
   }
 };
 
-Loops.prototype.closeLoop = function () {
+Paths.prototype.closePath = function () {
   // loops should not have any gaps between the indexes,
   // so all we need to do is add a cell containing the largest and smallest indexes
 
   var largest = Number.NEGATIVE_INFINITY;
   var smallest = Number.POSITIVE_INFINITY;
 
-  var item = this.loops[this.activeLoop];
+  var item = this.loops[this.activePath];
 
   for (var i = 0; i < item.length; i++) {
     for (var j = 0; j < item[i].length; j++) {
@@ -64,7 +64,7 @@ Loops.prototype.closeLoop = function () {
   this.addEdge(smallest, largest);
 };
 
-Loops.prototype.mutatePoint = function (index, value) {
+Paths.prototype.mutatePoint = function (index, value) {
   var item = this.points[index];
   item[0] = value[0];
   item[1] = value[1];
@@ -74,14 +74,14 @@ Loops.prototype.mutatePoint = function (index, value) {
 // PSLG (Planar straight-line graphs)
 // [0, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1]
 // [[1, 2], [2, 3], [3, 1]]
-Loops.prototype.toPslg = function () {
+Paths.prototype.toPslg = function () {
   return {
     positions: this.points,
     cells: this.generateCells()
   };
 };
 
-Loops.prototype.generateCells = function () {
+Paths.prototype.generateCells = function () {
   var cells = [];
 
   for (var i = 0; i < this.loops.length; i++) {
@@ -94,12 +94,12 @@ Loops.prototype.generateCells = function () {
   return cells;
 };
 
-Loops.prototype.dump = function () {
+Paths.prototype.dump = function () {
   console.error('this.loops:', this.loops);
   console.error('this.points:', this.points);
 };
 
-Loops.prototype.render = function (sketchShader, circleShader, geometry, gl, projection, view, model, activePoint) {
+Paths.prototype.render = function (sketchShader, circleShader, geometry, gl, projection, view, model, activePoint) {
   var sketch = this.generateCells();
   var sketchGeometry = Geometry(gl);
 
@@ -129,7 +129,7 @@ Loops.prototype.render = function (sketchShader, circleShader, geometry, gl, pro
   }
 };
 
-Loops.prototype.findNearestPoint = function (point) {
+Paths.prototype.findNearestPoint = function (point) {
   var result = {
     nearestPointIndex: 0,
     distance: undefined
@@ -146,4 +146,4 @@ Loops.prototype.findNearestPoint = function (point) {
   return result;
 };
 
-module.exports = Loops;
+module.exports = Paths;
