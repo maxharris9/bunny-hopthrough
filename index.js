@@ -7,8 +7,15 @@ var pick = require('camera-picking-ray');
 var intersect = require('ray-plane-intersection');
 var quad = require('primitive-quad')();
 var gl = require('fc')(render, false, 3);
+var createSolver = require('2d-constraints-bfgs');
+var constraints = require('2d-constraints-bfgs/constraints')
+
 var camera = require('./camera')(gl.canvas, null, gl.dirty);
 var Paths = require('./paths');
+
+var solver = createSolver();
+
+var findStartingIndexes = require('./pslg');
 
 var geometry = Geometry(gl);
 geometry.attr('aPosition', quad.positions);
@@ -43,6 +50,20 @@ function initSamplePaths () {
 
   return l;
 }
+
+// add a horizontal constraint to diagonal line
+solver.add([constraints.vertical, [
+  [paths.points[0], paths.points[1]]
+]])
+
+window.solve = function() {
+  solver.solve()
+  gl.dirty();
+}
+
+var sketchGeometry = Geometry(gl);
+sketchGeometry.attr('aPosition', sketch.positions);
+sketchGeometry.faces(sketch.cells, { size: 2 });
 
 // Create the base matrices to be used
 // when rendering the quad. Alternatively, can
