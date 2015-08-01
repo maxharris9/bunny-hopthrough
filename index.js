@@ -1,12 +1,9 @@
 var Geometry = require('gl-geometry');
-//var fit = require('canvas-fit');
 var glShader = require('gl-shader');
 var mat4 = require('gl-mat4');
-//var normals = require('normals');
 var glslify = require('glslify');
 var dot = require('gl-vec3/dot');
 var pick = require('camera-picking-ray');
-//var intersect = require('ray-sphere-intersection');
 var intersect = require('ray-plane-intersection');
 var quad = require('primitive-quad')();
 var gl = require('fc')(render, false, 3);
@@ -22,11 +19,6 @@ geometry.faces(quad.cells);
 // PSLG (Planar straight-line graphs)
 // [0, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1]
 // [[1, 2], [2, 3], [3, 1]]
-
-// var sketch = {
-//   positions: [[-1, -1, 0], [1, 1, 0], [1, -1, 0]],
-//   cells: [[0, 1]]
-// };
 
 var loops = new Loops();
 
@@ -211,13 +203,9 @@ function handleMouseDown (event) {
 
   var mouse3 = projectMouseToPlane(event);
 
-
-
   switch (mode) {
     case 'DRAW':
       if (mouse3) {
-console.log('activeLoop:', activeLoop);
-
 var firstEdgeModeIndex1 = loops.addPoint(mouse3);
 activePoint = firstEdgeModeIndex1;
 
