@@ -2,7 +2,7 @@ var distance = require('gl-vec3/distance');
 var Geometry = require('gl-geometry');
 
 function Paths () {
-  this.loops = []; // contains an array of loop arrays. i.e., [ [[0, 1], [1, 2], [2, 0]], [[3, 4], [5, 6]] ]
+  this.paths = []; // contains an array of loop arrays. i.e., [ [[0, 1], [1, 2], [2, 0]], [[3, 4], [5, 6]] ]
   this.points = []; // just a big array of points. i.e., [0, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1]
 
   this.activePath = 0;
@@ -10,13 +10,13 @@ function Paths () {
 }
 
 Paths.prototype.newPath = function () {
-  this.loops.push([]);
+  this.paths.push([]);
 
-  this.activePath = this.loops.length - 1;
+  this.activePath = this.paths.length - 1;
 };
 
 Paths.prototype.addEdge = function (edgeStartIndex, edgeEndIndex) {
-  var l = this.loops[this.activePath];
+  var l = this.paths[this.activePath];
   if (l) {
     l.push([edgeStartIndex, edgeEndIndex]);
   }
@@ -32,7 +32,7 @@ Paths.prototype.addPoint = function (point) {
 Paths.prototype.growPath = function (point) {
   var newPointIndex = this.addPoint(point);
 
-  var x = this.loops[this.activePath];
+  var x = this.paths[this.activePath];
 
   if (x.length > 0) {
     var lastCell = x[x.length - 1];
@@ -44,13 +44,13 @@ Paths.prototype.growPath = function (point) {
 };
 
 Paths.prototype.closePath = function () {
-  // loops should not have any gaps between the indexes,
+  // paths should not have any gaps between the indexes,
   // so all we need to do is add a cell containing the largest and smallest indexes
 
   var largest = Number.NEGATIVE_INFINITY;
   var smallest = Number.POSITIVE_INFINITY;
 
-  var item = this.loops[this.activePath];
+  var item = this.paths[this.activePath];
 
   for (var i = 0; i < item.length; i++) {
     for (var j = 0; j < item[i].length; j++) {
@@ -84,10 +84,10 @@ Paths.prototype.toPslg = function () {
 Paths.prototype.generateCells = function () {
   var cells = [];
 
-  for (var i = 0; i < this.loops.length; i++) {
-    for (var j = 0; j < this.loops[i].length; j++) {
+  for (var i = 0; i < this.paths.length; i++) {
+    for (var j = 0; j < this.paths[i].length; j++) {
       // TODO: only push unique items
-      cells.push(this.loops[i][j]);
+      cells.push(this.paths[i][j]);
     }
   }
 
@@ -95,7 +95,7 @@ Paths.prototype.generateCells = function () {
 };
 
 Paths.prototype.dump = function () {
-  console.error('this.loops:', this.loops);
+  console.error('this.paths:', this.paths);
   console.error('this.points:', this.points);
 };
 
