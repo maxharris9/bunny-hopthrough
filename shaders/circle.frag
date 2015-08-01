@@ -1,22 +1,27 @@
+#ifdef GL_OES_standard_derivatives
+#extension GL_OES_standard_derivatives : enable
+#endif
+
 precision mediump float;
-varying vec2 uv;
+
+#pragma glslify: aastep = require('glsl-aastep')
+
 uniform vec4 color1;
+uniform vec2 resolution;
+
+varying float distanceToCamera;
+varying vec2 uv;
 
 void main () {
-  float border = 0.01;
+
+  float border = 0.1;
   float radius = 0.5;
   vec4 color0 = vec4(0.0, 0.0, 0.0, 0.0);
 
-  vec2 m = uv - vec2(0.5, 0.5);
-  float dist = radius - sqrt(m.x * m.x + m.y * m.y);
+  float len = length(uv - 0.5);
 
-  float t = 0.0;
-  if (dist > border) {
-    t = 1.0;
-  }
-  else if (dist > 0.0) {
-    t = dist / border;
-  }
+  // //anti-alias
+  len = aastep(radius, len);
 
-  gl_FragColor = mix(color0, color1, t);
+  gl_FragColor = mix(color1, color0, len);
 }
