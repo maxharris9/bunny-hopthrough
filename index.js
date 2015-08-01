@@ -22,6 +22,9 @@ geometry.attr('aUV', quad.uvs, { size: 2 });
 geometry.attr('aNormal', quad.normals);
 geometry.faces(quad.cells);
 
+// turn on webgl extensions
+gl.getExtension('OES_standard_derivatives');
+
 // PSLG (Planar straight-line graphs)
 // [0, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1]
 // [[1, 2], [2, 3], [3, 1]]
