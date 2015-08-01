@@ -231,7 +231,7 @@ firstEdgeMode = true;
       }
     break;
 
-    case 'TWEAK':
+    case 'TWEAK': // jshint ignore:line
     default:
       var nearestPoint = loops.findNearestPoint(mouse3);
 
@@ -243,7 +243,7 @@ firstEdgeMode = true;
   }
 }
 
-function handleMouseUp (event) {
+function handleMouseUp () {
   switch (mode) {
     case 'POINTMOVING':
       mode = 'TWEAK';
@@ -300,7 +300,7 @@ window.setTweakMode = function () {
 
 window.setNewLoopMode = function () {
   mode = 'NEWLOOP';
-}
+};
 
 window.sketch = sketch;
 window.loops = loops;
