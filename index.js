@@ -11,9 +11,6 @@ var intersect = require('ray-plane-intersection');
 var quad = require('primitive-quad')();
 var gl = require('fc')(render, false, 3);
 var camera = require('./camera')(gl.canvas, null, gl.dirty);
-
-var findStartingIndexes = require('./pslg');
-
 var Loops = require('./loops');
 
 var geometry = Geometry(gl);
@@ -338,16 +335,3 @@ function updateSketchGeometry () {
   sketchGeometry.attr('aPosition', sketch.positions);
   sketchGeometry.faces(sketch.cells, { size: 2 });
 }
-
-/*
-/// externals:
-
-the plane,
-matrices,
-PSLG management:
-  - a way to add points,
-  - remove points,
-  - move points,
-  - close the path (by using topology: sketch.cells) - by typing a command in the console `closePath()`
-  // https://github.com/mikolalysenko/simplicial-complex might help
-*/
