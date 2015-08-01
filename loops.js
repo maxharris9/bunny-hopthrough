@@ -1,4 +1,5 @@
 var distance = require('gl-vec3/distance');
+var Geometry = require('gl-geometry');
 
 function Loops () {
   this.loops = []; // contains an array of loop arrays. i.e., [ [[0, 1], [1, 2], [2, 0]], [[3, 4], [5, 6]] ]
@@ -70,7 +71,17 @@ Loops.prototype.mutatePoint = function (index, value) {
   item[2] = value[2];
 };
 
+// PSLG (Planar straight-line graphs)
+// [0, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1]
+// [[1, 2], [2, 3], [3, 1]]
 Loops.prototype.toPslg = function () {
+  return {
+    positions: this.points,
+    cells: this.generateCells()
+  };
+};
+
+Loops.prototype.generateCells = function () {
   var cells = [];
 
   for (var i = 0; i < this.loops.length; i++) {
@@ -80,15 +91,42 @@ Loops.prototype.toPslg = function () {
     }
   }
 
-  return {
-    positions: this.points,
-    cells: cells
-  };
+  return cells;
 };
 
 Loops.prototype.dump = function () {
   console.error('this.loops:', this.loops);
   console.error('this.points:', this.points);
+};
+
+Loops.prototype.render = function (sketchShader, circleShader, geometry, gl, projection, view, model, activePoint) {
+  var sketch = this.generateCells();
+  var sketchGeometry = Geometry(gl);
+
+  sketchGeometry.attr('aPosition', this.points);
+  sketchGeometry.faces(sketch, { size: 2 });
+
+  sketchGeometry.bind(sketchShader);
+  sketchShader.uniforms.uProjection = projection;
+  sketchShader.uniforms.uView = view;
+  sketchShader.uniforms.uModel = model;
+  gl.lineWidth(1);
+  sketchGeometry.draw(gl.LINES);
+
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+  geometry.bind(circleShader);
+
+  for (var i = 0 ; i < this.points.length; i++) {
+    circleShader.uniforms.uProjection = projection;
+    circleShader.uniforms.uView = view;
+    circleShader.uniforms.uModel = model;
+    circleShader.uniforms.uTranslate = this.points[i];
+    circleShader.uniforms.color1 = (activePoint === i) ? [1.0, 0.6, 0.2, 1.0] : [0.0, 0.0, 0.0, 1.0];
+
+    geometry.draw(gl.TRIANGLES);
+  }
 };
 
 Loops.prototype.findNearestPoint = function (point) {

@@ -19,26 +19,22 @@ geometry.faces(quad.cells);
 // turn on webgl extensions
 gl.getExtension('OES_standard_derivatives');
 
-// PSLG (Planar straight-line graphs)
-// [0, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1]
-// [[1, 2], [2, 3], [3, 1]]
+var loops = initSampleLoops();
 
-var loops = new Loops();
+function initSampleLoops () {
+  var l = new Loops();
 
-loops.addPoint([-1, -1, 0]);
-loops.addPoint([ 1,  1, 0]);
+  l.addPoint([-1, -1, 0]);
+  l.addPoint([ 1,  1, 0]);
 
-loops.newLoop();
-loops.addEdge(0, 1); // connect the first two points
+  l.newLoop();
+  l.addEdge(0, 1); // connect the first two points
 
-loops.growLoop([1, -1, 0]);
-loops.closeLoop();
+  l.growLoop([1, -1, 0]);
+  l.closeLoop();
 
-var sketch = loops.toPslg();
-
-var sketchGeometry = Geometry(gl);
-sketchGeometry.attr('aPosition', sketch.positions);
-sketchGeometry.faces(sketch.cells, { size: 2 });
+  return l;
+}
 
 // Create the base matrices to be used
 // when rendering the quad. Alternatively, can
@@ -139,33 +135,7 @@ function render () {
   geometry.draw(gl.TRIANGLES);
   geometry.unbind();
 
-  sketchGeometry.bind(sketchShader);
-  sketchShader.uniforms.uProjection = projection;
-  sketchShader.uniforms.uView = view;
-  sketchShader.uniforms.uModel = model;
-  gl.lineWidth(1);
-  sketchGeometry.draw(gl.LINES);
-
-  gl.enable(gl.BLEND);
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
-  geometry.bind(circleShader);
-
-  for (var i = 0 ; i < sketch.positions.length; i++) {
-    var vec = sketch.positions[i];
-    // Updates our model/view/projection matrices, sending them
-    // to the GPU as uniform variables that we can use in
-    // `shaders/quad.vert` and `shaders/quad.frag`.
-    circleShader.uniforms.uProjection = projection;
-    circleShader.uniforms.uView = view;
-    circleShader.uniforms.uModel = model;
-    circleShader.uniforms.uTranslate = vec;
-    circleShader.uniforms.color1 = (activePoint === i) ? [1.0, 0.6, 0.2, 1.0] : [0.0, 0.0, 0.0, 1.0];
-
-    // Finally: draws the quad to the screen! The rest is
-    // handled in our shaders.
-    geometry.draw(gl.TRIANGLES);
-  }
+  loops.render(sketchShader, circleShader, geometry, gl, projection, view, model, activePoint);
 
   geometry.unbind();
   gl.disable(gl.BLEND);
@@ -197,7 +167,6 @@ window.addEventListener('mousedown', handleMouseDown, true);
 window.addEventListener('mouseup', handleMouseUp, true);
 window.addEventListener('mousemove', handleMouseMove, true);
 
-
 var firstEdgeMode = false; // fuck this is a nasty hair! TODO: fix!
 var firstEdgeModeIndex0 = 0; // so is this
 
@@ -219,7 +188,6 @@ if (firstEdgeMode) {
 else {
   loops.growLoop(mouse3);
 }
-        updateSketchGeometry();
         gl.dirty();
       }
     break;
@@ -263,8 +231,6 @@ function handleMouseMove (event) {
     case 'DRAW':
       if (mouse3) {
         loops.mutatePoint(activePoint, mouse3);
-
-        updateSketchGeometry();
         gl.dirty();
       }
     break;
@@ -272,10 +238,7 @@ function handleMouseMove (event) {
     case 'POINTMOVING':
       if (mouse3) {
         loops.mutatePoint(activePoint, mouse3);
-
-        updateSketchGeometry();
         gl.dirty();
-
         event.stopPropagation();
       }
     break;
@@ -290,7 +253,6 @@ function handleMouseMove (event) {
 }
 
 var activePoint = 0;
-
 var mode = 'NONE';
 
 window.setDrawMode = function () {
@@ -305,25 +267,8 @@ window.setNewLoopMode = function () {
   mode = 'NEWLOOP';
 };
 
-window.sketch = sketch;
-window.loops = loops;
-
 window.closePath = function () {
   loops.closeLoop();
 
-  updateSketchGeometry();
   gl.dirty();
 };
-
-function updateSketchGeometry () {
-  // TODO: render more directly, without converting to PSLG first?
-  sketch = loops.toPslg();
-
-  // TODO: this is a horrible hack!
-//sketchGeometry.dispose()
-  sketchGeometry._attributes.length = 0;
-  sketchGeometry._keys.length = 0;
-
-  sketchGeometry.attr('aPosition', sketch.positions);
-  sketchGeometry.faces(sketch.cells, { size: 2 });
-}
