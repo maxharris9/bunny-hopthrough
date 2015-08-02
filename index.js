@@ -24,14 +24,22 @@ var paths = initSamplePaths();
 function initSamplePaths () {
   var l = new Paths();
 
-  l.addPoint([-1, -1, 0]);
-  l.addPoint([ 1,  1, 0]);
+  l.newPath();
+
+  l.addPoint([0, 0, 0]);
+  l.addPoint([0, 1, 0]);
+  l.addPoint([1, 1, 0]);
+
+  l.closePath();
 
   l.newPath();
-  l.addEdge(0, 1); // connect the first two points
 
-  l.growPath([1, -1, 0]);
-  l.closePath();
+  l.addPoint([1, 0, 0]);
+  l.addPoint([1.5, 1, 0]);
+  l.addPoint([1.5, 1.5, 0]);
+  l.addPoint([2.5, 0.5, 0]);
+
+  //l.closePath();
 
   return l;
 }
@@ -135,7 +143,7 @@ function render () {
   geometry.draw(gl.TRIANGLES);
   geometry.unbind();
 
-  paths.render(sketchShader, circleShader, geometry, gl, projection, view, model, activePoint);
+  paths.render(sketchShader, circleShader, geometry, gl, projection, view, model);
 
   geometry.unbind();
   gl.disable(gl.BLEND);
@@ -167,9 +175,6 @@ window.addEventListener('mousedown', handleMouseDown, true);
 window.addEventListener('mouseup', handleMouseUp, true);
 window.addEventListener('mousemove', handleMouseMove, true);
 
-var firstEdgeMode = false; // fuck this is a nasty hair! TODO: fix!
-var firstEdgeModeIndex0 = 0; // so is this
-
 function handleMouseDown (event) {
   var selectionPointRadius = 0.1;
 
@@ -178,16 +183,7 @@ function handleMouseDown (event) {
   switch (mode) {
     case 'DRAW':
       if (mouse3) {
-var firstEdgeModeIndex1 = paths.addPoint(mouse3);
-activePoint = firstEdgeModeIndex1;
-
-if (firstEdgeMode) {
-  paths.addEdge(firstEdgeModeIndex0, firstEdgeModeIndex1);
-  firstEdgeMode = false;
-}
-else {
-  paths.growPath(mouse3);
-}
+        paths.addPoint(mouse3);
         gl.dirty();
       }
     break;
@@ -195,19 +191,26 @@ else {
     case 'NEWLOOP':
       if (mouse3) {
         paths.newPath();
-firstEdgeModeIndex0 = paths.addPoint(mouse3);
-activePoint = firstEdgeModeIndex0;
-firstEdgeMode = true;
+
+        paths.addPoint(mouse3);
         mode = 'NONE';
       }
     break;
 
     case 'TWEAK': // jshint ignore:line
     default:
-      var nearestPoint = paths.findNearestPoint(mouse3);
+      var foundPoint = paths.findNearestPoint(mouse3, selectionPointRadius);
+      if (foundPoint) {
 
-      if (nearestPoint.distance < selectionPointRadius) {
-        activePoint = nearestPoint.nearestPointIndex;
+        // TODO:
+        // if !shift then clear the selection
+        // add foundPoint to selection
+
+        paths.setActivePath(foundPoint.pathIndex);
+
+        // TODO: fix this
+        paths.paths[foundPoint.pathIndex].setActivePoint(foundPoint.pointIndex);
+
         mode = 'POINTMOVING';
       }
     break;
@@ -230,14 +233,14 @@ function handleMouseMove (event) {
   switch (mode) {
     case 'DRAW':
       if (mouse3) {
-        paths.mutatePoint(activePoint, mouse3);
+        paths.mutatePoint(mouse3);
         gl.dirty();
       }
     break;
 
     case 'POINTMOVING':
       if (mouse3) {
-        paths.mutatePoint(activePoint, mouse3);
+        paths.mutatePoint(mouse3);
         gl.dirty();
         event.stopPropagation();
       }
@@ -252,7 +255,6 @@ function handleMouseMove (event) {
   }
 }
 
-var activePoint = 0;
 var mode = 'NONE';
 
 window.setDrawMode = function () {
