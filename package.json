@@ -13,6 +13,7 @@
     "test": "tape test*.js"
   },
   "dependencies": {
+    "2d-constraints-bfgs": "tmpvar/2d-constraints-bfgs",
     "beefy": "^2.1.1",
     "browserify": "^6.2.0",
     "bunny": "^1.0.1",

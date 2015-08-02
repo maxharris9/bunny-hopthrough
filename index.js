@@ -7,8 +7,14 @@ var pick = require('camera-picking-ray');
 var intersect = require('ray-plane-intersection');
 var quad = require('primitive-quad')();
 var gl = require('fc')(render, false, 3);
+var createSolver = require('2d-constraints-bfgs');
+var constraints = require('2d-constraints-bfgs/constraints')
+
 var camera = require('./camera')(gl.canvas, null, gl.dirty);
 var Paths = require('./paths');
+
+var solver = createSolver();
+
 
 var geometry = Geometry(gl);
 geometry.attr('aPosition', quad.positions);
@@ -42,6 +48,28 @@ function initSamplePaths () {
   //l.closePath();
 
   return l;
+}
+
+window.paths = paths;
+window.constrain = constrain;
+function constrain(name, args) {
+  if (!constraints[name]) {
+    console.error('constraint not found:', name);
+    console.error('valid constraint names:', Object.keys(constraints).join(', '));
+    return;
+  }
+  var insert = [constraints[name], args];
+  solver.add(insert);
+  try {
+    if (!solver.solve()) {
+      solver.remove(insert);
+      console.error('the system became overconstrained when `%s` was added. It has been automatically removed', name);
+    } else {
+      gl.dirty();
+    }
+  } catch (e) {
+    console.error('invalid arguments passed to', name);
+  }
 }
 
 // Create the base matrices to be used
@@ -240,8 +268,13 @@ function handleMouseMove (event) {
 
     case 'POINTMOVING':
       if (mouse3) {
-        paths.mutatePoint(mouse3);
-        gl.dirty();
+        var path = paths.paths[paths.activePath];
+        if (!solver.isPointFixed(path.vertexes[path.activePoint])) {
+          paths.mutatePoint(mouse3);
+          solver.solve();
+          gl.dirty();
+        }
+
         event.stopPropagation();
       }
     break;
