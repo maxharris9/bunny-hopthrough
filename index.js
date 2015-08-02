@@ -50,37 +50,30 @@ function initSamplePaths () {
   return l;
 }
 
-// add a horizontal constraint to diagonal line
-solver.add([constraints.horizontal, [
-  [paths.points[0], paths.points[1]]
-]])
 
-// solver.add([constraints.horizontal, [
-//   [paths.points[2], paths.points[1]]
-// ]])
-
-
-solver.add([constraints.fixed, [
-  paths.points[1]
-]])
-
-solver.add([constraints.fixed, [
-  paths.points[2]
-]])
-
-// solver.add([constraints.lineLength, [
-//   1, [paths.points[2], paths.points[1]]
-// ]])
-
-// solver.add([constraints.lineLength, [
-//   1, [paths.points[0], paths.points[1]]
-// ]])
-
-window.solve = function() {
-  solver.solve()
-  gl.dirty();
+window.constrain = constrain;
+function constrain(name, args) {
+  if (!constraints[name]) {
+    console.error('constraint not found:', name);
+    console.error('valid constraint names:', Object.keys(constraints).join(', '));
+    return;
+  }
+  var insert = [constraints[name], args.map(function(arg) {
+    var v = paths.points[arg];
+    return v ? v : arg;
+  })];
+  solver.add(insert);
+  try {
+    if (!solver.solve()) {
+      solver.remove(insert);
+      console.error('the system became overconstrained when `%s` was added. It has been automatically removed', name);
+    } else {
+      gl.dirty();
+    }
+  } catch (e) {
+    console.error('invalid arguments passed to', name);
+  }
 }
-
 
 // Create the base matrices to be used
 // when rendering the quad. Alternatively, can
