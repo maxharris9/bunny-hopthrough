@@ -15,7 +15,6 @@ var Paths = require('./paths');
 
 var solver = createSolver();
 
-var findStartingIndexes = require('./pslg');
 
 var geometry = Geometry(gl);
 geometry.attr('aPosition', quad.positions);
@@ -52,18 +51,36 @@ function initSamplePaths () {
 }
 
 // add a horizontal constraint to diagonal line
-solver.add([constraints.vertical, [
+solver.add([constraints.horizontal, [
   [paths.points[0], paths.points[1]]
 ]])
+
+// solver.add([constraints.horizontal, [
+//   [paths.points[2], paths.points[1]]
+// ]])
+
+
+solver.add([constraints.fixed, [
+  paths.points[1]
+]])
+
+solver.add([constraints.fixed, [
+  paths.points[2]
+]])
+
+// solver.add([constraints.lineLength, [
+//   1, [paths.points[2], paths.points[1]]
+// ]])
+
+// solver.add([constraints.lineLength, [
+//   1, [paths.points[0], paths.points[1]]
+// ]])
 
 window.solve = function() {
   solver.solve()
   gl.dirty();
 }
 
-var sketchGeometry = Geometry(gl);
-sketchGeometry.attr('aPosition', sketch.positions);
-sketchGeometry.faces(sketch.cells, { size: 2 });
 
 // Create the base matrices to be used
 // when rendering the quad. Alternatively, can
