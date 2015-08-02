@@ -50,7 +50,7 @@ function initSamplePaths () {
   return l;
 }
 
-
+window.paths = paths;
 window.constrain = constrain;
 function constrain(name, args) {
   if (!constraints[name]) {
@@ -58,10 +58,7 @@ function constrain(name, args) {
     console.error('valid constraint names:', Object.keys(constraints).join(', '));
     return;
   }
-  var insert = [constraints[name], args.map(function(arg) {
-    var v = paths.points[arg];
-    return v ? v : arg;
-  })];
+  var insert = [constraints[name], args];
   solver.add(insert);
   try {
     if (!solver.solve()) {
@@ -271,8 +268,13 @@ function handleMouseMove (event) {
 
     case 'POINTMOVING':
       if (mouse3) {
-        paths.mutatePoint(mouse3);
-        gl.dirty();
+        var path = paths.paths[paths.activePath];
+        if (!solver.isPointFixed(path.vertexes[path.activePoint])) {
+          paths.mutatePoint(mouse3);
+          solver.solve();
+          gl.dirty();
+        }
+
         event.stopPropagation();
       }
     break;
