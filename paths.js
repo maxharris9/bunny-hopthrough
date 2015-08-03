@@ -51,7 +51,7 @@ Path.prototype.render = function (circleShader, geometry, gl, projection, view, 
     circleShader.uniforms.uView = view;
     circleShader.uniforms.uModel = model;
     circleShader.uniforms.uTranslate = this.vertexes[i];
-    circleShader.uniforms.color1 = (this.activePoint === i) ? [1.0, 0.6, 0.2, 1.0] : [0.0, 0.0, 0.0, 1.0];
+    circleShader.uniforms.color1 = (this.activePoint === i) ? [0.0, 1, 0, 1.0] : [0.0, 0.0, 0.0, 1.0];
 
     geometry.draw(gl.TRIANGLES);
   }

@@ -39,42 +39,21 @@ var toolbarButtonStyle = {
   zIndex: 1
 };
 
-
-/*
-var mode = 'NONE';
-
-window.setDrawMode = function () {
-  mode = 'DRAW';
-};
-
-window.setTweakMode = function () {
-  mode = 'TWEAK';
-};
-
-window.setNewPathMode = function () {
-  mode = 'NEWPATH';
-};
-*/
-
 class Hello extends React.Component {
   panClick () {
     mode = 'NONE';
-    console.log('in ' + mode + ' mode');
   }
 
   arrowClick () {
-    mode = 'TWEAK';
-    console.log('in ' + mode + ' mode');
+    enterTweakMode();
   }
 
   drawClick () {
     mode = 'DRAW';
-    console.log('in ' + mode + ' mode');
   }
 
   newPathClick () {
     mode = 'NEWPATH';
-    console.log('in ' + mode + ' mode');
   }
 
   render () {
@@ -315,8 +294,17 @@ function handleMouseDown (event) {
       case 'NEWPATH':
         paths.newPath();
 
+        // we have to clone mouse3 here because if we
+        // add the same point twice, path.mutatePoint()
+        // will change both points!
+        paths.addPoint(mouse3.slice());
+
+        // this is a point that may or may not become
+        // a part of the final path, depending on whether
+        // the user cancels next
         paths.addPoint(mouse3);
-        mode = 'NONE';
+        mode = 'DRAW';
+        gl.dirty();
       break;
 
       case 'TWEAK': // jshint ignore:line
@@ -388,9 +376,17 @@ window.setDrawMode = function () {
   mode = 'DRAW';
 };
 
-window.setTweakMode = function () {
+function enterTweakMode () {
+  if ('DRAW' === mode) {
+    var x = paths.paths[paths.activePath];
+    x.vertexes.pop();
+    x.vertexes.pop();
+    gl.dirty();
+  }
   mode = 'TWEAK';
 };
+
+window.setTweakMode = enterTweakMode;
 
 window.setNewPathMode = function () {
   mode = 'NEWLOOP';
