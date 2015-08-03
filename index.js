@@ -19,28 +19,82 @@ var solver = createSolver();
 
 var React = require('react');
 
-var toolbarButtonStyle = {
-  border: '1px red',
+var toolbarStyle = {
   margin: '2px',
   background: 'orange',
   width: '25px',
   position: 'absolute',
+  zIndex: 1,
+  '-o-user-select': 'none',
+  '-moz-user-select': 'none',
+  '-khtml-user-select': 'none',
+  '-webkit-user-select': 'none'
+};
+
+var toolbarButtonStyle = {
+  border: '1px red',
+  background: 'orange',
+  width: '25px',
+  position: 'relative',
   zIndex: 1
 };
 
-class Hello extends React.Component {
-  arrowClick (event) {
-    console.log('clicking arrow chooches');
 
-    // event.stopPropagation();
+/*
+var mode = 'NONE';
+
+window.setDrawMode = function () {
+  mode = 'DRAW';
+};
+
+window.setTweakMode = function () {
+  mode = 'TWEAK';
+};
+
+window.setNewPathMode = function () {
+  mode = 'NEWPATH';
+};
+*/
+
+class Hello extends React.Component {
+  panClick () {
+    mode = 'NONE';
+    console.log('in ' + mode + ' mode');
+  }
+
+  arrowClick () {
+    mode = 'TWEAK';
+    console.log('in ' + mode + ' mode');
+  }
+
+  drawClick () {
+    mode = 'DRAW';
+    console.log('in ' + mode + ' mode');
+  }
+
+  newPathClick () {
+    mode = 'NEWPATH';
+    console.log('in ' + mode + ' mode');
   }
 
   render () {
+    // TODO: redraw the nice SVG arrow
     return (
-      <div style={toolbarButtonStyle} onClick={this.arrowClick}>
-        <svg enable-background="new 0 0 24 24" id="Layer_1" version="1.0" viewBox="0 0 24 24" width="20" height="20">
-          <path d="M7,2l12,11.2l-5.8,0.5l3.3,7.3l-2.2,1l-3.2-7.4L7,18.5V2"/>
-        </svg>
+      <div style={toolbarStyle}>
+        <div style={toolbarButtonStyle} onClick={this.panClick}>
+          P
+        </div>
+        <div style={toolbarButtonStyle} onClick={this.arrowClick}>
+          <svg enable-background="new 0 0 24 24" id="Layer_1" version="1.0" viewBox="0 0 24 24" width="20" height="20">
+            <path d="M7,2l12,11.2l-5.8,0.5l3.3,7.3l-2.2,1l-3.2-7.4L7,18.5V2"/>
+          </svg>
+        </div>
+        <div style={toolbarButtonStyle} onClick={this.drawClick}>
+          D
+        </div>
+        <div style={toolbarButtonStyle} onClick={this.newPathClick}>
+          N
+        </div>
       </div>
     );
   }
@@ -258,7 +312,7 @@ function handleMouseDown (event) {
         gl.dirty();
       break;
 
-      case 'NEWLOOP':
+      case 'NEWPATH':
         paths.newPath();
 
         paths.addPoint(mouse3);
