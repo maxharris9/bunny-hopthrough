@@ -1,3 +1,5 @@
+'use strict';
+
 var Geometry = require('gl-geometry');
 var glShader = require('gl-shader');
 var mat4 = require('gl-mat4');
@@ -6,15 +8,56 @@ var dot = require('gl-vec3/dot');
 var pick = require('camera-picking-ray');
 var intersect = require('ray-plane-intersection');
 var quad = require('primitive-quad')();
-var gl = require('fc')(render, false, 3);
+var fc = require('fc');
+//var gl = require('fc')(render, false, 3);
 var createSolver = require('2d-constraints-bfgs');
-var constraints = require('2d-constraints-bfgs/constraints')
+var constraints = require('2d-constraints-bfgs/constraints');
 
-var camera = require('./camera')(gl.canvas, null, gl.dirty);
 var Paths = require('./paths');
 
 var solver = createSolver();
 
+var React = require('react');
+
+var toolbarButtonStyle = {
+  border: '1px red',
+  margin: '2px',
+  background: 'orange',
+  width: '25px',
+  position: 'absolute',
+  zIndex: 1
+};
+
+class Hello extends React.Component {
+  arrowClick (event) {
+    console.log('clicking arrow chooches');
+
+    // event.stopPropagation();
+  }
+
+  render () {
+    return (
+      <div style={toolbarButtonStyle} onClick={this.arrowClick}>
+        <svg enable-background="new 0 0 24 24" id="Layer_1" version="1.0" viewBox="0 0 24 24" width="20" height="20">
+          <path d="M7,2l12,11.2l-5.8,0.5l3.3,7.3l-2.2,1l-3.2-7.4L7,18.5V2"/>
+        </svg>
+      </div>
+    );
+  }
+}
+
+initToolbar();
+
+function initToolbar () {
+  var toolbar = document.createElement('div');
+  toolbar.id = 'toolbar';
+  document.body.appendChild(toolbar);
+
+  React.render(<Hello />, document.getElementById('toolbar'));
+}
+
+var gl = fc(render, false, 3);
+var camera = require('./camera')(gl.canvas, null, gl.dirty);
 
 var geometry = Geometry(gl);
 geometry.attr('aPosition', quad.positions);
@@ -208,40 +251,38 @@ function handleMouseDown (event) {
 
   var mouse3 = projectMouseToPlane(event);
 
-  switch (mode) {
-    case 'DRAW':
-      if (mouse3) {
+  if (mouse3) {
+    switch (mode) {
+      case 'DRAW':
         paths.addPoint(mouse3);
         gl.dirty();
-      }
-    break;
+      break;
 
-    case 'NEWLOOP':
-      if (mouse3) {
+      case 'NEWLOOP':
         paths.newPath();
 
         paths.addPoint(mouse3);
         mode = 'NONE';
-      }
-    break;
+      break;
 
-    case 'TWEAK': // jshint ignore:line
-    default:
-      var foundPoint = paths.findNearestPoint(mouse3, selectionPointRadius);
-      if (foundPoint) {
+      case 'TWEAK': // jshint ignore:line
+      default:
+        var foundPoint = paths.findNearestPoint(mouse3, selectionPointRadius);
+        if (foundPoint) {
 
-        // TODO:
-        // if !shift then clear the selection
-        // add foundPoint to selection
+          // TODO:
+          // if !shift then clear the selection
+          // add foundPoint to selection
 
-        paths.setActivePath(foundPoint.pathIndex);
+          paths.setActivePath(foundPoint.pathIndex);
 
-        // TODO: fix this
-        paths.paths[foundPoint.pathIndex].setActivePoint(foundPoint.pointIndex);
+          // TODO: fix this
+          paths.paths[foundPoint.pathIndex].setActivePoint(foundPoint.pointIndex);
 
-        mode = 'POINTMOVING';
-      }
-    break;
+          mode = 'POINTMOVING';
+        }
+      break;
+    }
   }
 }
 
@@ -258,16 +299,15 @@ function handleMouseUp () {
 
 function handleMouseMove (event) {
   var mouse3 = projectMouseToPlane(event);
-  switch (mode) {
-    case 'DRAW':
-      if (mouse3) {
+
+  if (mouse3) {
+    switch (mode) {
+      case 'DRAW':
         paths.mutatePoint(mouse3);
         gl.dirty();
-      }
-    break;
+      break;
 
-    case 'POINTMOVING':
-      if (mouse3) {
+      case 'POINTMOVING':
         var path = paths.paths[paths.activePath];
         if (!solver.isPointFixed(path.vertexes[path.activePoint])) {
           paths.mutatePoint(mouse3);
@@ -276,15 +316,15 @@ function handleMouseMove (event) {
         }
 
         event.stopPropagation();
-      }
-    break;
+      break;
 
-    case 'TWEAK':
-    break;
+      case 'TWEAK':
+      break;
 
-    default:
-      console.log('mode not handled:', mode);
-    break;
+      default:
+        console.log('mode not handled:', mode);
+      break;
+    }
   }
 }
 
