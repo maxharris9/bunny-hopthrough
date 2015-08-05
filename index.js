@@ -39,7 +39,7 @@ var toolbarButtonStyle = {
   zIndex: 1
 };
 
-class Hello extends React.Component {
+class Toolbar extends React.Component {
   panClick () {
     mode = 'NONE';
   }
@@ -86,7 +86,7 @@ function initToolbar () {
   toolbar.id = 'toolbar';
   document.body.appendChild(toolbar);
 
-  React.render(<Hello />, document.getElementById('toolbar'));
+  React.render(<Toolbar />, document.getElementById('toolbar'));
 }
 
 var gl = fc(render, false, 3);
