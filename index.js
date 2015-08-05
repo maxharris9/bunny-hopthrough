@@ -60,18 +60,18 @@ class Hello extends React.Component {
     // TODO: redraw the nice SVG arrow
     return (
       <div style={toolbarStyle}>
-        <div style={toolbarButtonStyle} onClick={this.panClick}>
+        <div style={toolbarButtonStyle} onClick={this.panClick} title="Pan">
           P
         </div>
-        <div style={toolbarButtonStyle} onClick={this.arrowClick}>
+        <div style={toolbarButtonStyle} onClick={this.arrowClick} title="Arrow">
           <svg enable-background="new 0 0 24 24" id="Layer_1" version="1.0" viewBox="0 0 24 24" width="20" height="20">
             <path d="M7,2l12,11.2l-5.8,0.5l3.3,7.3l-2.2,1l-3.2-7.4L7,18.5V2"/>
           </svg>
         </div>
-        <div style={toolbarButtonStyle} onClick={this.drawClick}>
+        <div style={toolbarButtonStyle} onClick={this.drawClick} title="Polyline">
           D
         </div>
-        <div style={toolbarButtonStyle} onClick={this.newPathClick}>
+        <div style={toolbarButtonStyle} onClick={this.newPathClick} title="New Path">
           N
         </div>
       </div>
