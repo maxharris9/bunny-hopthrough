@@ -9,7 +9,6 @@ var pick = require('camera-picking-ray');
 var intersect = require('ray-plane-intersection');
 var quad = require('primitive-quad')();
 var fc = require('fc');
-//var gl = require('fc')(render, false, 3);
 var createSolver = require('2d-constraints-bfgs');
 var constraints = require('2d-constraints-bfgs/constraints');
 
@@ -39,6 +38,8 @@ var toolbarButtonStyle = {
   zIndex: 1
 };
 
+var mode = 'NONE';
+
 class Toolbar extends React.Component {
   panClick () {
     mode = 'NONE';
@@ -54,6 +55,25 @@ class Toolbar extends React.Component {
 
   newPathClick () {
     mode = 'NEWPATH';
+  }
+
+  deletePointClick () {
+    var aPath = paths.paths[paths.activePath];
+    aPath.vertexes.splice(aPath.activePoint, 1);
+
+    gl.dirty();
+  }
+
+  closePathClick () {
+    paths.closePath();
+
+    gl.dirty();
+  }
+
+  openPathClick () {
+    paths.openPath();
+
+    gl.dirty();
   }
 
   render () {
@@ -73,6 +93,17 @@ class Toolbar extends React.Component {
         </div>
         <div style={toolbarButtonStyle} onClick={this.newPathClick} title="New Path">
           N
+        </div>
+
+        <div style={toolbarButtonStyle} onClick={this.deletePointClick} title="Delete selected point">
+          X
+        </div>
+
+        <div style={toolbarButtonStyle} onClick={this.closePathClick} title="Close selected path">
+          Cl
+        </div>
+        <div style={toolbarButtonStyle} onClick={this.openPathClick} title="Open selected path">
+          Op
         </div>
       </div>
     );
@@ -370,12 +401,6 @@ function handleMouseMove (event) {
   }
 }
 
-var mode = 'NONE';
-
-window.setDrawMode = function () {
-  mode = 'DRAW';
-};
-
 function enterTweakMode () {
   if ('DRAW' === mode) {
     var x = paths.paths[paths.activePath];
@@ -384,16 +409,4 @@ function enterTweakMode () {
     gl.dirty();
   }
   mode = 'TWEAK';
-};
-
-window.setTweakMode = enterTweakMode;
-
-window.setNewPathMode = function () {
-  mode = 'NEWLOOP';
-};
-
-window.closePath = function () {
-  paths.closePath();
-
-  gl.dirty();
 };
