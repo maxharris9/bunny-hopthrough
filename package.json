@@ -4,16 +4,18 @@
   "private": true,
   "browserify": {
     "transform": [
+      "babelify",
       "reactify",
       "glslify"
     ]
   },
   "scripts": {
-    "start": "budo index.js -- -t reactify | garnish",
+    "start": "budo index.js --verbose --live | garnish",
     "test": "tape test*.js"
   },
   "dependencies": {
     "2d-constraints-bfgs": "tmpvar/2d-constraints-bfgs",
+    "babelify": "^6.1.3",
     "beefy": "^2.1.1",
     "budo": "^4.1.0",
     "bunny": "^1.0.1",

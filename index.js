@@ -1,4 +1,3 @@
-'use strict';
 
 var Geometry = require('gl-geometry');
 var glShader = require('gl-shader');
@@ -8,10 +7,14 @@ var dot = require('gl-vec3/dot');
 var pick = require('camera-picking-ray');
 var intersect = require('ray-plane-intersection');
 var quad = require('primitive-quad')();
+var EventEmitter = require('events').EventEmitter;
 var fc = require('fc');
 var createSolver = require('2d-constraints-bfgs');
 var constraints = require('2d-constraints-bfgs/constraints');
 
+import { ConstraintList, ConstraintOptions } from './constraint-ui'
+
+var subModeEmitter = new EventEmitter();
 var Paths = require('./paths');
 
 var solver = createSolver();
@@ -34,11 +37,15 @@ var toolbarButtonStyle = {
   border: '1px red',
   background: 'orange',
   width: '25px',
+  textAlign: 'center',
+  lineHeight: '25px',
   position: 'relative',
+  cursor: 'pointer',
   zIndex: 1
 };
 
 var mode = 'NONE';
+var submode = 'NONE';
 
 class Toolbar extends React.Component {
   panClick () {
@@ -76,6 +83,16 @@ class Toolbar extends React.Component {
     gl.dirty();
   }
 
+  addConstraintClick () {
+    submode = 'ADDCONSTRAINT';
+
+    var constraintElement = document.createElement('div');
+    constraintElement.id = 'constraints';
+    document.body.appendChild(constraintElement);
+
+    React.render(<ConstraintList constraints={constraints} constrain={constrain} emitter={subModeEmitter} />, constraintElement);
+  }
+
   render () {
     // TODO: redraw the nice SVG arrow
     return (
@@ -94,7 +111,6 @@ class Toolbar extends React.Component {
         <div style={toolbarButtonStyle} onClick={this.newPathClick} title="New Path">
           N
         </div>
-
         <div style={toolbarButtonStyle} onClick={this.deletePointClick} title="Delete selected point">
           X
         </div>
@@ -104,6 +120,9 @@ class Toolbar extends React.Component {
         </div>
         <div style={toolbarButtonStyle} onClick={this.openPathClick} title="Open selected path">
           Op
+        </div>
+        <div style={toolbarButtonStyle} onClick={this.addConstraintClick}>
+          C
         </div>
       </div>
     );
@@ -118,6 +137,14 @@ function initToolbar () {
   document.body.appendChild(toolbar);
 
   React.render(<Toolbar />, document.getElementById('toolbar'));
+}
+
+function initToolbar () {
+  var toolbar = document.createElement('div');
+  toolbar.id = 'toolbar';
+  document.body.appendChild(toolbar);
+
+  React.render(<Hello />, document.getElementById('toolbar'));
 }
 
 var gl = fc(render, false, 3);
@@ -145,12 +172,12 @@ function initSamplePaths () {
 
   l.closePath();
 
-  l.newPath();
+  // l.newPath();
 
-  l.addPoint([1, 0, 0]);
-  l.addPoint([1.5, 1, 0]);
-  l.addPoint([1.5, 1.5, 0]);
-  l.addPoint([2.5, 0.5, 0]);
+  // l.addPoint([1, 0, 0]);
+  // l.addPoint([1.5, 1, 0]);
+  // l.addPoint([1.5, 1.5, 0]);
+  // l.addPoint([2.5, 0.5, 0]);
 
   //l.closePath();
 
@@ -160,6 +187,7 @@ function initSamplePaths () {
 window.paths = paths;
 window.constrain = constrain;
 function constrain(name, args) {
+  console.log('constraining', name, args);
   if (!constraints[name]) {
     console.error('constraint not found:', name);
     console.error('valid constraint names:', Object.keys(constraints).join(', '));
@@ -176,6 +204,8 @@ function constrain(name, args) {
     }
   } catch (e) {
     console.error('invalid arguments passed to', name);
+    console.error(e.stack)
+    solver.remove(insert);
   }
 }
 
@@ -342,7 +372,7 @@ function handleMouseDown (event) {
       default:
         var foundPoint = paths.findNearestPoint(mouse3, selectionPointRadius);
         if (foundPoint) {
-
+console.log(foundPoint)
           // TODO:
           // if !shift then clear the selection
           // add foundPoint to selection
@@ -350,9 +380,13 @@ function handleMouseDown (event) {
           paths.setActivePath(foundPoint.pathIndex);
 
           // TODO: fix this
-          paths.paths[foundPoint.pathIndex].setActivePoint(foundPoint.pointIndex);
+          var path = paths.paths[foundPoint.pathIndex];
+          path.setActivePoint(foundPoint.pointIndex);
 
           mode = 'POINTMOVING';
+
+          subModeEmitter.emit('point-selected', paths.paths[foundPoint.pathIndex].vertexes[path.activePoint])
+
         }
       break;
     }
@@ -382,6 +416,7 @@ function handleMouseMove (event) {
 
       case 'POINTMOVING':
         var path = paths.paths[paths.activePath];
+
         if (!solver.isPointFixed(path.vertexes[path.activePoint])) {
           paths.mutatePoint(mouse3);
           solver.solve();
