@@ -144,7 +144,7 @@ function initToolbar () {
   toolbar.id = 'toolbar';
   document.body.appendChild(toolbar);
 
-  React.render(<Hello />, document.getElementById('toolbar'));
+  React.render(<Toolbar />, document.getElementById('toolbar'));
 }
 
 var gl = fc(render, false, 3);
