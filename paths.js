@@ -1,6 +1,9 @@
 var distance = require('gl-vec3/distance');
 var Geometry = require('gl-geometry');
 var poly2pslg = require('poly-to-pslg');
+var cleanpslg = require('clean-pslg');
+var Emitter = require('tiny-emitter');
+var inherits = require('util').inherits
 
 function Path () {
   // an array of points
@@ -108,12 +111,16 @@ Path.prototype.getFaces = function () {
 //////////// TODO: new file soon
 
 function Paths () {
+  Emitter.call(this);
+
   this.paths = [];
 
   // TODO: make this into a reference to selection
   // object which contains: [pointIndex, pointIndex2, pointIndex3...]
   this.activePath = -1;
 }
+
+inherits(Paths, Emitter);
 
 Paths.prototype.newPath = function () {
   var p = new Path();
@@ -127,20 +134,25 @@ Paths.prototype.setActivePath = function (pathIndex) {
 };
 
 Paths.prototype.addPoint = function (point) {
-  return this.paths[this.activePath].addPoint(point);
+  var p = this.paths[this.activePath].addPoint(point);
+  this.emit('dirty', this);
+  return p;
 };
 
 Paths.prototype.closePath = function () {
   this.paths[this.activePath].closePath();
+  this.emit('dirty', this);
 };
 
 Paths.prototype.openPath = function () {
   this.paths[this.activePath].openPath();
+  this.emit('dirty', this);
 };
 
 Paths.prototype.mutatePoint = function (point) {
   if (this.activePath > -1) {
     this.paths[this.activePath].mutatePoint(point);
+    this.emit('dirty', this);
   }
 };
 
@@ -189,9 +201,10 @@ Paths.prototype.render = function (sketchShader, circleShader, geometry, gl, pro
 };
 
 Paths.prototype.toPSLG = function() {
-  return poly2pslg(this.paths.map(function(path) {
+  // TODO: add filter for non-closed paths
+  return cleanpslg(poly2pslg(this.paths.map(function(path) {
     return path.vertexes
-  }));
+  })));
 };
 
 module.exports = Paths;

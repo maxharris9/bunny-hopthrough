@@ -214,6 +214,16 @@ function initSamplePaths () {
 
   return l;
 }
+
+paths.on('dirty', function(paths) {
+  extrusions.map(function(e) {
+    e.dispose();
+  });
+  extrusions.length = 0;
+  extrudeSketch(.5);
+  gl.dirty();
+})
+
 extrudeSketch(.5);
 
 window.paths = paths;
@@ -506,7 +516,7 @@ function enterTweakMode () {
   if ('DRAW' === mode) {
     var x = paths.paths[paths.activePath];
     x.vertexes.pop();
-    gl.dirty();
+    paths.emit('dirty');
   }
   mode = 'TWEAK';
 };
