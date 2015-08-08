@@ -27,7 +27,10 @@ export class ConstraintList extends React.Component {
   }
 
   doneWithConstraint(constraint) {
-    this.props.constrain(constraint[0], constraint[1]);
+    if (constraint) {
+      this.props.constrain(constraint[0], constraint[1]);
+    }
+
     this.setState({
       selected: false
     })
@@ -70,11 +73,46 @@ export class ConstraintOptions extends React.Component {
       new Array(this.state.constraint.args.length)
     ];
 
+    this.onInputKeyPressed = this.onInputKeyPressed.bind(this);
+  }
+
+  onInputKeyPressed(ev) {
+
+    switch (ev.keyCode) {
+      case 13:
+        this.onSave();
+      break;
+
+      case 27:
+        this.onCancel()
+      break;
+    }
+
+  }
+
+  componentDidMount() {
+    var el = React.findDOMNode(this)
+
+    // focus the first element
+    var inputs = el.getElementsByTagName('input');
+    inputs.length && inputs[0].focus();
+
+    // listen for <enter> and <esc>
+    el.addEventListener('keydown', this.onInputKeyPressed, true);
+  }
+
+  componentWillUnmount() {
+    var el = React.findDOMNode(this)
+    el.removeEventListener('keydown', this.onInputKeyPressed, true);
   }
 
   onSave() {
     console.log(this.constraintToAdd[1])
     this.props.doneWithConstraint(this.constraintToAdd.slice())
+  }
+
+  onCancel() {
+    this.props.doneWithConstraint()
   }
 
   onInputChange(index, value) {
@@ -93,16 +131,17 @@ export class ConstraintOptions extends React.Component {
           {constraint.args.map((arg, i) => {
             switch (arg) {
               case 'point':
-                return <li><ConstraintPointField key={i} emitter={this.props.emitter} updateValue={this.onInputChange.bind(this, i)} /></li>
+                return <li key={i}><ConstraintPointField emitter={this.props.emitter} updateValue={this.onInputChange.bind(this, i)} /></li>
               break;
 
               case 'float':
-                return <li><ConstraintFloatField key={i} emitter={this.props.emitter} updateValue={this.onInputChange.bind(this, i)} /></li>
+                return <li key={i}><ConstraintFloatField emitter={this.props.emitter} updateValue={this.onInputChange.bind(this, i)} /></li>
               break;
             }
           })}
 
           <li onClick={this.onSave.bind(this)}>save</li>
+          <li onClick={this.onCancel.bind(this)}>cancel</li>
         </ul>
       </div>
     );
@@ -131,15 +170,23 @@ class ConstraintPointField extends React.Component {
 class ConstraintFloatField extends React.Component {
   constructor (props) {
     super(props);
-    this.state = { value: false };
+    this.state = { value: '0.0' };
   }
 
   onChange(event) {
-    this.props.updateValue(parseFloat(event.target.value));
+    var f = parseFloat(event.target.value);
+
+    if (!isNaN(f)) {
+      this.props.updateValue(f);
+    } else {
+      f = '';
+    }
+
+    this.setState({ value: f });
   }
   // TODO: handle changes and forward the right thing to this.props.onUpdate
   render() {
-    return <input type="text" onChange={this.onChange.bind(this)} value={this.state.value ? this.state.value : '0.0'}  />
+    return <input type="text" onChange={this.onChange.bind(this)} value={this.state.value}  />
   }
 }
 
