@@ -62,6 +62,8 @@ class Toolbar extends React.Component {
 
   newPathClick () {
     mode = 'NEWPATH';
+    // don't cancel here so the global mouse handler can properly setup
+    // the new path.
   }
 
   deletePointClick () {
@@ -187,7 +189,6 @@ function initSamplePaths () {
 window.paths = paths;
 window.constrain = constrain;
 function constrain(name, args) {
-  console.log('constraining', name, args);
   if (!constraints[name]) {
     console.error('constraint not found:', name);
     console.error('valid constraint names:', Object.keys(constraints).join(', '));
@@ -339,9 +340,14 @@ function projectMouseToPlane (event) {
 window.addEventListener('mousedown', handleMouseDown, true);
 window.addEventListener('mouseup', handleMouseUp, true);
 window.addEventListener('mousemove', handleMouseMove, true);
+document.body.addEventListener('keydown', handleKeyDown, true);
 
 function handleMouseDown (event) {
   var selectionPointRadius = 0.1;
+
+  if (event.target !== gl.canvas) {
+    return;
+  }
 
   var mouse3 = projectMouseToPlane(event);
 
@@ -372,7 +378,7 @@ function handleMouseDown (event) {
       default:
         var foundPoint = paths.findNearestPoint(mouse3, selectionPointRadius);
         if (foundPoint) {
-console.log(foundPoint)
+
           // TODO:
           // if !shift then clear the selection
           // add foundPoint to selection
@@ -436,10 +442,22 @@ function handleMouseMove (event) {
   }
 }
 
+function handleKeyDown(ev) {
+  switch (ev.keyCode) {
+    case 27:
+      switch (mode) {
+        case 'DRAW':
+          enterTweakMode();
+        break;
+      }
+
+    break;
+  }
+}
+
 function enterTweakMode () {
   if ('DRAW' === mode) {
     var x = paths.paths[paths.activePath];
-    x.vertexes.pop();
     x.vertexes.pop();
     gl.dirty();
   }
