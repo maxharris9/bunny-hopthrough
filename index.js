@@ -11,6 +11,9 @@ var EventEmitter = require('events').EventEmitter;
 var fc = require('fc');
 var createSolver = require('2d-constraints-bfgs');
 var constraints = require('2d-constraints-bfgs/constraints');
+var cdt2d = require('cdt2d')
+
+var extrudePSLG = require('./modules/extrude-pslg')
 
 import { ConstraintList, ConstraintOptions } from './constraint-ui'
 
@@ -46,6 +49,9 @@ var toolbarButtonStyle = {
 
 var mode = 'NONE';
 var submode = 'NONE';
+
+var extrusions = [];
+
 
 class Toolbar extends React.Component {
   panClick () {
@@ -91,8 +97,12 @@ class Toolbar extends React.Component {
     var constraintElement = document.createElement('div');
     constraintElement.id = 'constraints';
     document.body.appendChild(constraintElement);
-
+    // TODO: allow this to be closed
     React.render(<ConstraintList constraints={constraints} constrain={constrain} emitter={subModeEmitter} />, constraintElement);
+  }
+
+  onExtrude () {
+    extrudeSketch();
   }
 
   render () {
@@ -123,8 +133,11 @@ class Toolbar extends React.Component {
         <div style={toolbarButtonStyle} onClick={this.openPathClick} title="Open selected path">
           Op
         </div>
-        <div style={toolbarButtonStyle} onClick={this.addConstraintClick}>
+        <div style={toolbarButtonStyle} onClick={this.addConstraintClick} title="Add Constraint">
           C
+        </div>
+        <div style={toolbarButtonStyle} onClick={this.onExtrude} title="Extrude">
+          Ex
         </div>
       </div>
     );
@@ -148,6 +161,23 @@ function initToolbar () {
 
   React.render(<Toolbar />, document.getElementById('toolbar'));
 }
+
+function extrudeSketch() {
+  var d = parseFloat(prompt('extrude distance?'));
+  // var d = 1;
+  if (!isNaN(d) && d) {
+
+    var pslg = paths.toPSLG();
+
+    var extrusion = extrudePSLG(pslg, [0, 0, 1], d);
+
+    var extrudedGeometry = Geometry(gl);
+    extrudedGeometry.attr('aPosition', extrusion.positions);
+    extrudedGeometry.faces(extrusion.cells);
+    extrusions.push(extrudedGeometry);
+  }
+}
+
 
 var gl = fc(render, false, 3);
 var camera = require('./camera')(gl.canvas, null, gl.dirty);
@@ -246,6 +276,12 @@ var circleShader = glShader(
   glslify('./shaders/circle.frag')
 );
 
+var extrudeShader = glShader(
+  gl,
+  glslify('./shaders/extrude.vert'),
+  glslify('./shaders/extrude.frag')
+);
+
 // The logic/update loop, which updates all of the variables
 // before they're used in our render function. It's optional
 // for you to keep `update` and `render` as separate steps.
@@ -312,6 +348,17 @@ function render () {
   paths.render(sketchShader, circleShader, geometry, gl, projection, view, model);
 
   geometry.unbind();
+
+  extrusions.forEach(function(extrusion) {
+    extrusion.bind(extrudeShader);
+
+      extrudeShader.uniforms.uProjection = projection;
+      extrudeShader.uniforms.uView = view;
+      extrudeShader.uniforms.uModel = model;
+
+      extrusion.draw(gl.TRIANGLES);
+    extrusion.unbind();
+  })
   gl.disable(gl.BLEND);
 }
 

@@ -1,5 +1,6 @@
 var distance = require('gl-vec3/distance');
 var Geometry = require('gl-geometry');
+var poly2pslg = require('poly-to-pslg');
 
 function Path () {
   // an array of points
@@ -187,30 +188,10 @@ Paths.prototype.render = function (sketchShader, circleShader, geometry, gl, pro
   }
 };
 
-// PSLG (Planar straight-line graphs)
-// [0, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1]
-// [[1, 2], [2, 3], [3, 1]]
-
-// TODO: fix this up?
-// define exactly what we expet from `positions`
-// Paths.prototype.toPslg = function () {
-//   return {
-//     positions: this.vertexes,
-//     cells: this.generateCells()
-//   };
-// };
-
-// Paths.prototype.generateCells = function () {
-//   var cells = [];
-
-//   for (var i = 0; i < this.paths.length; i++) {
-//     for (var j = 0; j < this.paths[i].length; j++) {
-//       // TODO: only push unique items
-//       cells.push(this.paths[i][j]);
-//     }
-//   }
-
-//   return cells;
-// };
+Paths.prototype.toPSLG = function() {
+  return poly2pslg(this.paths.map(function(path) {
+    return path.vertexes
+  }));
+};
 
 module.exports = Paths;
