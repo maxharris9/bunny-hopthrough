@@ -56,8 +56,6 @@ export class ConstraintList extends React.Component {
           </ul>
         </div>
       )
-
-
     }
     return <div style={constraintListStyle}>asdfasdfsad</div>
   }
@@ -128,6 +126,7 @@ export class ConstraintOptions extends React.Component {
     return (
       <div>
         <ul>
+          <li>{this.state.constraint.name}</li>
           {constraint.args.map((arg, i) => {
             switch (arg) {
               case 'point':
