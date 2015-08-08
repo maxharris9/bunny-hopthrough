@@ -151,14 +151,19 @@ class ConstraintPointField extends React.Component {
   constructor (props) {
     super(props);
     this.state = { value: false };
+    this.updateValue = this.props.updateValue;
   }
 
   onFocus() {
-    this.props.emitter.on('point-selected', this.props.updateValue)
+    this.props.emitter.on('point-selected', this.updateValue);
   }
 
   onBlur() {
-    this.props.emitter.removeListener('point-selected', this.props.updateValue)
+    this.props.emitter.removeListener('point-selected', this.updateValue);
+  }
+
+  componentWillUnmount() {
+    this.props.emitter.removeListener('point-selected', this.updateValue);
   }
 
   render() {
