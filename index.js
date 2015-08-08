@@ -162,8 +162,8 @@ function initToolbar () {
   React.render(<Toolbar />, document.getElementById('toolbar'));
 }
 
-function extrudeSketch() {
-  var d = parseFloat(prompt('extrude distance?'));
+function extrudeSketch(d) {
+  d  = d || parseFloat(prompt('extrude distance?'));
   // var d = 1;
   if (!isNaN(d) && d) {
 
@@ -177,7 +177,6 @@ function extrudeSketch() {
     extrusions.push(extrudedGeometry);
   }
 }
-
 
 var gl = fc(render, false, 3);
 var camera = require('./camera')(gl.canvas, null, gl.dirty);
@@ -204,17 +203,18 @@ function initSamplePaths () {
 
   l.closePath();
 
-  // l.newPath();
+  l.newPath();
 
-  // l.addPoint([1, 0, 0]);
-  // l.addPoint([1.5, 1, 0]);
-  // l.addPoint([1.5, 1.5, 0]);
-  // l.addPoint([2.5, 0.5, 0]);
+  l.addPoint([1, 0, 0]);
+  l.addPoint([1.5, 1, 0]);
+  l.addPoint([1.5, 1.5, 0]);
+  l.addPoint([2.5, 0.5, 0]);
 
-  //l.closePath();
+  l.closePath();
 
   return l;
 }
+extrudeSketch(.5);
 
 window.paths = paths;
 window.constrain = constrain;

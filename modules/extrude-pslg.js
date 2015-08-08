@@ -16,6 +16,18 @@ function extrudePSLG(pslg, normal, distance) {
   // edges do not need to be copied because they are not mutated.
   var points = pslg.points.slice();
   var pl = points.length;
+  var edges = pslg.edges;
+  var el = edges.length;
+
+  // triangulate the pslg internally
+  var extrusion = cdt2d(pslg.points, pslg.edges, { exterior: false })
+  // copy the triangulation edges w/ translation
+  var extrusionLength = extrusion.length;
+  for (var i=0; i<extrusionLength; i++) {
+    extrusion.push(extrusion[i].map(function(a) {
+      return a + pl;
+    }));
+  }
 
   // expand points to include the top surface
   for (var i=0; i<pl; i++) {
@@ -23,53 +35,31 @@ function extrudePSLG(pslg, normal, distance) {
     points.push(v3add([0, 0, 0], point, toAdd));
   }
 
-  // triangulate the pslg internally
-  var e = cdt2d(pslg.points, pslg.edges, { exterior: false })
-
-  // copy the triangulation edges
-  var el = e.length;
-  for (var i=0; i<el; i++) {
-    e.push(e[i].map(function(a) {
-      return a + pl;
-    }));
-  }
-
-  var edges = pslg.edges;
   var el = edges.length;
   var n = pl-1;
+  var start = 0;
+  var last = 0;
   for (var i=0; i<el; i++) {
-    /*
-
-      1:0        1:1
-        o--------o - extruded surface (top)
-        .      . .
-        .    .   .
-        .  .     .
-        .        .
-        o--------o - original surface (bottom)
-      0:0        0:1
-
-    */
-
+    // 1:0        1:1
+    //   o--------o - extruded surface (top)
+    //   .      . .
+    //   .    .   .
+    //   .  .     .
+    //   .        .
+    //   o--------o - original surface (bottom)
+    // 0:0        0:1
 
     // build 2 triangles
-    // [0:0, 1:1, 1:0]
-    e.push([
-      i,
-      i+pl,
-      i+pl-1,
-    ]);
+    var edge = edges[i];
+    var a = edge[0];
+    var b = edge[1];
 
-    // [0:0, 0:1, 1:1]
-    e.push([
-      i,
-      i+1,
-      i+pl,
-    ]);
+    extrusion.push([a, b + pl, a + pl]);
+    extrusion.push([a, b, b + pl]);
   }
 
   return {
     positions: points,
-    cells: e
+    cells: extrusion
   }
 }
