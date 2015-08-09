@@ -38,6 +38,7 @@
     "mouse-pressed": "0.0.1",
     "normals": "^0.1.0",
     "orbit-camera": "^1.0.0",
+    "overlay-pslg": "^1.0.0",
     "poly-to-pslg": "^1.0.1",
     "primitive-quad": "^1.0.1",
     "primitive-sphere": "^2.0.0",

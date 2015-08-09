@@ -1,7 +1,8 @@
 var distance = require('gl-vec3/distance');
 var Geometry = require('gl-geometry');
 var poly2pslg = require('poly-to-pslg');
-var cleanpslg = require('clean-pslg');
+var cleanPSLG = require('clean-pslg');
+var overlayPSLG = require('clean-pslg');
 var Emitter = require('tiny-emitter');
 var inherits = require('util').inherits
 
@@ -202,9 +203,16 @@ Paths.prototype.render = function (sketchShader, circleShader, geometry, gl, pro
 
 Paths.prototype.toPSLG = function() {
   // TODO: add filter for non-closed paths
-  return cleanpslg(poly2pslg(this.paths.map(function(path) {
+  // TODO: merge shells
+  // TODO: add cache for non-dirty paths
+
+  var pslg = poly2pslg(this.paths.map(function(path) {
     return path.vertexes
-  })));
+  }));
+
+  cleanPSLG(pslg.points, pslg.edges);
+
+  return pslg;
 };
 
 module.exports = Paths;
