@@ -154,14 +154,6 @@ function initToolbar () {
   React.render(<Toolbar />, document.getElementById('toolbar'));
 }
 
-function initToolbar () {
-  var toolbar = document.createElement('div');
-  toolbar.id = 'toolbar';
-  document.body.appendChild(toolbar);
-
-  React.render(<Toolbar />, document.getElementById('toolbar'));
-}
-
 function extrudeSketch(d) {
   d  = d || parseFloat(prompt('extrude distance?'));
   // var d = 1;
