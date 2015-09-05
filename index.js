@@ -23,6 +23,11 @@ import React, { Component } from 'react'
 var subModeEmitter = new EventEmitter();
 var Paths = require('./paths');
 
+var sketchPlane = {
+  normal: [0, 0, -1],
+  origin: [0, 0, 0]
+};
+
 var solver = createSolver();
 
 var toolbarStyle = {
@@ -389,21 +394,17 @@ function projectMouseToPlane (event) {
   var out = [0, 0, 0];
   var ray = createMouseRay(event, width, height, projection, view);
 
-  // TODO: compute the actual plane normal
-  var planeNormal = [0, 0, -1];
-  var planeOrigin = [0, 0, 0];
-
-  return intersect(out, ray.origin, ray.direction, planeNormal, -dot([], planeNormal, planeOrigin));
+  return intersect(
+    out,
+    ray.origin,
+    ray.direction,
+    sketchPlane.normal,
+    -dot(sketchPlane.normal, sketchPlane.origin)
+  );
 }
 
 function mousePickFace(event) {
-  var out = [0, 0, 0];
   var ray = createMouseRay(event, width, height, projection, view);
-
-  // TODO: compute the actual plane normal
-  var planeNormal = [0, 0, -1];
-  var planeOrigin = [0, 0, 0];
-
   return rayMeshIntersect(ray.origin, ray.direction, extrusions.map(e => e.original));
 }
 
@@ -482,7 +483,8 @@ function handleMouseUp () {
 
 function handleMouseMove (event) {
   var mouse3 = projectMouseToPlane(event);
-  meshHovered = mousePickFace(event)
+  meshHovered = mousePickFace(event);
+
   if (mouse3) {
     switch (mode) {
       case 'DRAW':
