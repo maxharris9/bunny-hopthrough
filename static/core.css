@@ -1,0 +1,124 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+.OptionList, .OptionList > li {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  line-height: 1.5em;
+  cursor: pointer;
+  background: #fafafa;
+}
+
+.OptionList > li {
+  padding: 0px .5em;
+}
+
+.OptionList > li:hover {
+  background-color: #f0f0f0;
+}
+
+.ConstraintList, .ConstraintInput {
+  position: absolute;
+  z-index: 1;
+  right: 5px;
+  top: 5px;
+  border: 1px solid #bbb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.OptionsInput > h1, .ConstraintList > h1 {
+  font-size: .75em;
+  background: #ddd;
+  line-height: 2em;
+  padding:0;
+  margin:0px;
+  border-radius: 3px 3px 0px 0px;
+  text-align: center;
+  border-bottom: 1px solid #ccc;
+  text-transform: uppercase;
+}
+
+.OptionsInput > h1 > button, .ConstraintList > h1 > button {
+  float: right;
+  margin: 2px 2px 0 0;
+
+  border-radius: 100px;
+  background-color: #eee;
+  border: 1px solid #aaa;
+}
+
+.OptionsInput dt {
+  width: 40%;
+  line-height: 2em;
+}
+.OptionsInput dd {
+  text-align: right;
+}
+
+.OptionsInput dd > input {
+  width: 20%;
+  text-align: right;
+  float: right;
+}
+
+.OptionsInput > .actions {
+  padding-top: 2em;
+}
+
+
+.OptionsInput > .actions > button {
+  border: 0;
+  line-height: 2em;
+  font-weight: 700;
+}
+
+.OptionsInput > table {
+  min-width: 150px;
+  margin: .25em;
+  margin-top: .5em;
+}
+
+.OptionsInput > table > tbody > tr > td {
+  text-align: left;
+}
+
+.OptionsInput > table > tbody > tr > td:first-child {
+  width: auto;
+  text-align: right;
+}
+
+.OptionsInput > table > tbody > tr > td > input {
+  width: 100px;
+  text-align: right;
+  border: 1px solid #ddd;
+  font-size: .75em;
+}
+
+.OptionsInput > .actions > button.cancel {
+  background: #666;
+}
+
+.OptionsInput > .actions > button.save:hover {
+  color: #142B15;
+}
+
+.OptionsInput > .actions > button.save {
+  cursor: pointer;
+  color: #255227;
+  background: #5CCA61;
+  text-transform: uppercase;
+  position: absolute;
+  margin-top: 5em;
+  padding: 0;
+  bottom:0;
+  left:0;
+  width: 100%;
+  line-height: 3em;
+  font-size: .4em;
+}
+

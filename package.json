@@ -10,7 +10,7 @@
     ]
   },
   "scripts": {
-    "start": "budo index.js --verbose --live | garnish",
+    "start": "budo index.js:bundle.js --dir static --verbose --live | garnish",
     "test": "tape test*.js"
   },
   "dependencies": {

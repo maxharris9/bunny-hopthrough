@@ -1,17 +1,7 @@
+import React, { Component } from 'react'
+import OptionList from './components/OptionList'
 
-import React from 'react'
-
-
-var constraintListStyle = {
-  position: 'absolute',
-  zIndex: 1,
-  width: 200,
-  height: 200,
-  right: 0,
-  background: '#f0f'
-}
-
-export class ConstraintList extends React.Component {
+export class ConstraintList extends Component {
   constructor (props) {
     super(props)
 
@@ -42,18 +32,19 @@ export class ConstraintList extends React.Component {
 
     if (this.state.selected) {
       return(
-        <div style={constraintListStyle}>
+        <div className='ConstraintInput'>
           <ConstraintOptions emitter={this.props.emitter} constraint={this.state.selected} doneWithConstraint={this.doneWithConstraint.bind(this)} />
         </div>
       );
     } else {
       return (
-        <div style={constraintListStyle}>
-          <ul>
+        <div className='ConstraintList'>
+          <h1>Add Constraint</h1>
+          <OptionList>
           {constraintNames.map((constraintName) => {
             return <li key={constraintName} onClick={this.onAddConstraint.bind(this, constraintName)}>{constraintName}</li>
           })}
-          </ul>
+          </OptionList>
         </div>
       )
     }
@@ -62,7 +53,7 @@ export class ConstraintList extends React.Component {
 }
 
 
-export class ConstraintOptions extends React.Component {
+export class ConstraintOptions extends Component {
   constructor (props) {
     super(props);
     this.state = props;
@@ -124,30 +115,47 @@ export class ConstraintOptions extends React.Component {
 
     // TODO: redraw the nice SVG arrow
     return (
-      <div>
-        <ul>
-          <li>{this.state.constraint.name}</li>
-          {constraint.args.map((arg, i) => {
-            switch (arg) {
-              case 'point':
-                return <li key={i}><ConstraintPointField emitter={this.props.emitter} updateValue={this.onInputChange.bind(this, i)} /></li>
-              break;
+      <div className='OptionsInput'>
+        <h1>
+          {this.state.constraint.name}
+          <button className='cancel' onClick={this.onCancel.bind(this)}>X</button>
+        </h1>
+        <table>
+        {constraint.args.map((arg, i) => {
+          switch (arg) {
+            case 'point':
+              return (
+                <tr key={i}>
+                  <td>point</td>
+                  <td className='input'>
+                    <ConstraintPointField emitter={this.props.emitter} updateValue={this.onInputChange.bind(this, i)} />
+                  </td>
+                </tr>
+              )
+            break;
 
-              case 'float':
-                return <li key={i}><ConstraintFloatField emitter={this.props.emitter} updateValue={this.onInputChange.bind(this, i)} /></li>
-              break;
-            }
-          })}
-
-          <li onClick={this.onSave.bind(this)}>save</li>
-          <li onClick={this.onCancel.bind(this)}>cancel</li>
-        </ul>
+            case 'float':
+              return (
+                <tr key={i}>
+                  <td>float</td>
+                  <td className='input'>
+                    <ConstraintFloatField emitter={this.props.emitter} updateValue={this.onInputChange.bind(this, i)} />
+                  </td>
+                </tr>
+              )
+            break;
+          }
+        })}
+        </table>
+        <div className='actions'>
+          <button className='save' onClick={this.onSave.bind(this)}>save</button>
+        </div>
       </div>
     );
   }
 }
 
-class ConstraintPointField extends React.Component {
+class ConstraintPointField extends Component {
   constructor (props) {
     super(props);
     this.state = { value: false };
@@ -171,7 +179,7 @@ class ConstraintPointField extends React.Component {
   }
 }
 
-class ConstraintFloatField extends React.Component {
+class ConstraintFloatField extends Component {
   constructor (props) {
     super(props);
     this.state = { value: '0.0' };

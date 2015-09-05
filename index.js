@@ -16,13 +16,12 @@ var cdt2d = require('cdt2d')
 var extrudePSLG = require('./modules/extrude-pslg')
 
 import { ConstraintList, ConstraintOptions } from './constraint-ui'
+import React, { Component } from 'react'
 
 var subModeEmitter = new EventEmitter();
 var Paths = require('./paths');
 
 var solver = createSolver();
-
-var React = require('react');
 
 var toolbarStyle = {
   margin: '2px',
