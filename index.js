@@ -14,8 +14,10 @@ var constraints = require('2d-constraints-bfgs/constraints');
 var cdt2d = require('cdt2d');
 
 var createMouseRay = require('./modules/create-mouse-ray');
-var rayMeshIntersect = require('./modules/ray-mesh-intersection')
+var rayMeshIntersect = require('./modules/ray-mesh-intersection');
 var extrudePSLG = require('./modules/extrude-pslg');
+var computeCoplanarFaces = require('./modules/compute-coplanar-faces');
+var findHoveredFace = require('./modules/find-hovered-face');
 
 import { ConstraintList, ConstraintOptions } from './constraint-ui'
 import React, { Component } from 'react'
@@ -186,6 +188,18 @@ function extrudeSketch(d) {
     extrudedGeometry.attr('aPosition', extrusion.positions);
     extrudedGeometry.faces(extrusion.cells);
     extrudedGeometry.original = extrusion;
+
+    extrudedGeometry.coplanarFaces = computeCoplanarFaces(extrusion).map(function(cells) {
+      var faceGeometry = Geometry(gl);
+      faceGeometry.attr('aPosition', extrusion.positions);
+      faceGeometry.faces(cells);
+      faceGeometry.original = {
+        positions: extrusion.positions,
+        cells: cells
+      };
+      return faceGeometry;
+    })
+
     extrusions.push(extrudedGeometry);
   }
 }
@@ -375,7 +389,7 @@ function render () {
     extrusion.bind(extrudeShader);
 
       if (meshHovered && meshHovered.mesh === i) {
-        extrudeShader.uniforms.color = [0.0, 1.0, 0.0, 0.75]
+        extrudeShader.uniforms.color = [0.0, 0.0, 1.0, 1]
       } else {
         extrudeShader.uniforms.color = [0.0, 0.0, 1.0, 0.75]
       }
@@ -387,6 +401,21 @@ function render () {
       extrusion.draw(gl.TRIANGLES);
     extrusion.unbind();
   })
+
+  var hoveredFace = findHoveredFace(extrusions, meshHovered);
+  if (hoveredFace) {
+    hoveredFace.bind(extrudeShader);
+
+      extrudeShader.uniforms.color = [1.0, 0.0, 1.0, 0.75]
+      extrudeShader.uniforms.uProjection = projection;
+      extrudeShader.uniforms.uView = view;
+      extrudeShader.uniforms.uModel = model;
+
+      hoveredFace.draw(gl.TRIANGLES);
+    hoveredFace.unbind();
+  }
+
+
   gl.disable(gl.BLEND);
 }
 
