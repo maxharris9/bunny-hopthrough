@@ -26,7 +26,7 @@ var subModeEmitter = new EventEmitter();
 var Paths = require('./paths');
 
 var sketchPlane = {
-  normal: [0, 0, -1],
+  normal: [0, 0, 1],
   origin: [0, 0, 0]
 };
 
