@@ -1,10 +1,4 @@
 var distance = require('gl-vec3/distance');
-var Geometry = require('gl-geometry');
-var poly2pslg = require('poly-to-pslg');
-var cleanPSLG = require('clean-pslg');
-var overlayPSLG = require('clean-pslg');
-var Emitter = require('tiny-emitter');
-var inherits = require('util').inherits
 
 function Path () {
   // an array of points
@@ -108,3 +102,5 @@ Path.prototype.getFaces = function () {
 
   return result;
 };
+
+module.exports = Path;

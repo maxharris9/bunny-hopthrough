@@ -1,3 +1,11 @@
+var Emitter = require('tiny-emitter');
+var inherits = require('util').inherits;
+var Path = require('./path');
+var poly2pslg = require('poly-to-pslg');
+var cleanPSLG = require('clean-pslg');
+// var overlayPSLG = require('clean-pslg');
+var Geometry = require('gl-geometry');
+
 function Paths () {
   Emitter.call(this);
 
@@ -94,7 +102,7 @@ Paths.prototype.toPSLG = function() {
   // TODO: add cache for non-dirty paths
 
   var pslg = poly2pslg(this.paths.map(function(path) {
-    return path.vertexes
+    return path.vertexes;
   }));
 
   cleanPSLG(pslg.points, pslg.edges);
