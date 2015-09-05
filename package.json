@@ -43,6 +43,7 @@
     "primitive-quad": "^1.0.1",
     "primitive-sphere": "^2.0.0",
     "ray-plane-intersection": "^1.0.0",
+    "ray-triangle-intersection": "^1.0.3",
     "react": "^0.13.3",
     "reactify": "^1.1.1",
     "scroll-speed": "^1.0.0",

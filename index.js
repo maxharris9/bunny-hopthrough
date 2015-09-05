@@ -11,9 +11,11 @@ var EventEmitter = require('events').EventEmitter;
 var fc = require('fc');
 var createSolver = require('2d-constraints-bfgs');
 var constraints = require('2d-constraints-bfgs/constraints');
-var cdt2d = require('cdt2d')
+var cdt2d = require('cdt2d');
 
-var extrudePSLG = require('./modules/extrude-pslg')
+var createMouseRay = require('./modules/create-mouse-ray');
+var rayMeshIntersect = require('./modules/ray-mesh-intersection')
+var extrudePSLG = require('./modules/extrude-pslg');
 
 import { ConstraintList, ConstraintOptions } from './constraint-ui'
 import React, { Component } from 'react'
@@ -50,7 +52,7 @@ var mode = 'NONE';
 var submode = 'NONE';
 
 var extrusions = [];
-
+var meshHovered = false;
 
 class Toolbar extends React.Component {
   panClick () {
@@ -178,6 +180,7 @@ function extrudeSketch(d) {
     var extrudedGeometry = Geometry(gl);
     extrudedGeometry.attr('aPosition', extrusion.positions);
     extrudedGeometry.faces(extrusion.cells);
+    extrudedGeometry.original = extrusion;
     extrusions.push(extrudedGeometry);
   }
 }
@@ -363,8 +366,14 @@ function render () {
 
   geometry.unbind();
 
-  extrusions.forEach(function(extrusion) {
+  extrusions.forEach(function(extrusion, i) {
     extrusion.bind(extrudeShader);
+
+      if (meshHovered && meshHovered.mesh === i) {
+        extrudeShader.uniforms.color = [0.0, 1.0, 0.0, 0.75]
+      } else {
+        extrudeShader.uniforms.color = [0.0, 0.0, 1.0, 0.75]
+      }
 
       extrudeShader.uniforms.uProjection = projection;
       extrudeShader.uniforms.uView = view;
@@ -378,24 +387,24 @@ function render () {
 
 function projectMouseToPlane (event) {
   var out = [0, 0, 0];
+  var ray = createMouseRay(event, width, height, projection, view);
 
-  var ray = {
-    origin: [0, 0, 0],
-    direction: [0, 0, 0]
-  };
-
-  var mouse = [event.x, event.y];
-  var viewport = [0, 0, width, height];
-
-  var projView = mat4.multiply([], projection, view);
-  var invProjView = mat4.invert([], projView);
-
-  pick(ray.origin, ray.direction, mouse, viewport, invProjView);
-
-  //var center = [0, 0, 0];
   // TODO: compute the actual plane normal
   var planeNormal = [0, 0, -1];
-  return intersect(out, ray.origin, ray.direction, planeNormal, -dot(planeNormal, [1, 0, 0]));
+  var planeOrigin = [0, 0, 0];
+
+  return intersect(out, ray.origin, ray.direction, planeNormal, -dot([], planeNormal, planeOrigin));
+}
+
+function mousePickFace(event) {
+  var out = [0, 0, 0];
+  var ray = createMouseRay(event, width, height, projection, view);
+
+  // TODO: compute the actual plane normal
+  var planeNormal = [0, 0, -1];
+  var planeOrigin = [0, 0, 0];
+
+  return rayMeshIntersect(ray.origin, ray.direction, extrusions.map(e => e.original));
 }
 
 window.addEventListener('mousedown', handleMouseDown, true);
@@ -473,7 +482,7 @@ function handleMouseUp () {
 
 function handleMouseMove (event) {
   var mouse3 = projectMouseToPlane(event);
-
+  meshHovered = mousePickFace(event)
   if (mouse3) {
     switch (mode) {
       case 'DRAW':
