@@ -182,7 +182,7 @@ function extrudeSketch(d) {
 
     var pslg = paths.toPSLG();
 
-    var extrusion = extrudePSLG(pslg, [0, 0, 1], d);
+    var extrusion = extrudePSLG(pslg, sketchPlane.normal, d);
 
     var extrudedGeometry = Geometry(gl);
     extrudedGeometry.attr('aPosition', extrusion.positions);
