@@ -1,6 +1,7 @@
 var v3mul = require('gl-vec3/multiply');
 var v3add = require('gl-vec3/add');
 var cdt2d = require('cdt2d');
+var normals = require('normals');
 
 module.exports = extrudePSLG;
 
@@ -20,11 +21,11 @@ function extrudePSLG(pslg, normal, distance) {
   var el = edges.length;
 
   // triangulate the pslg internally
-  var extrusion = cdt2d(pslg.points, pslg.edges, { exterior: false })
+  var cells = cdt2d(pslg.points, pslg.edges, { exterior: false })
   // copy the triangulation edges w/ translation
-  var extrusionLength = extrusion.length;
-  for (var i=0; i<extrusionLength; i++) {
-    extrusion.push(extrusion[i].map(function(a) {
+  var cellsLength = cells.length;
+  for (var i=0; i<cellsLength; i++) {
+    cells.push(cells[i].map(function(a) {
       return a + pl;
     }));
   }
@@ -54,12 +55,14 @@ function extrudePSLG(pslg, normal, distance) {
     var a = edge[0];
     var b = edge[1];
 
-    extrusion.push([a, b + pl, a + pl]);
-    extrusion.push([a, b, b + pl]);
+    cells.push([a, b + pl, a + pl]);
+    cells.push([a, b, b + pl]);
   }
 
   return {
     positions: points,
-    cells: extrusion
+    cells: cells,
+    faceNormals: normals.faceNormals(cells, points),
+    vertexNormals: normals.vertexNormals(cells, points)
   }
 }
