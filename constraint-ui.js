@@ -8,6 +8,8 @@ export class ConstraintList extends Component {
     this.state = {
       selected: false
     }
+
+    this.handleCancel = this.handleCancel.bind(this)
   }
 
   onAddConstraint(constraintName) {
@@ -24,6 +26,26 @@ export class ConstraintList extends Component {
     this.setState({
       selected: false
     })
+  }
+
+  handleCancel (e) {
+    if (e && e.keyCode && e.keyCode !== 27) {
+      return;
+    }
+
+    if (this.state.selected) {
+      this.doneWithConstraint()
+    } else {
+      this.props.handleClose();
+    }
+  }
+
+  componentWillMount () {
+    window.addEventListener('keydown', this.handleCancel)
+  }
+
+  componentWillUnmount () {
+    window.removeEventListener('keydown', this.handleCancel)
   }
 
   render () {
@@ -72,11 +94,8 @@ export class ConstraintOptions extends Component {
 
     switch (ev.keyCode) {
       case 13:
+        // TODO: track whether this is the last item in the list
         this.onSave();
-      break;
-
-      case 27:
-        this.onCancel()
       break;
     }
 
@@ -90,12 +109,15 @@ export class ConstraintOptions extends Component {
     inputs.length && inputs[0].focus();
 
     // listen for <enter> and <esc>
-    el.addEventListener('keydown', this.onInputKeyPressed, true);
+    window.addEventListener('keydown', this.onInputKeyPressed, true);
   }
 
   componentWillUnmount() {
-    var el = React.findDOMNode(this)
-    el.removeEventListener('keydown', this.onInputKeyPressed, true);
+    window.removeEventListener('keydown', this.onInputKeyPressed, true);
+  }
+
+  onCancel() {
+    this.props.doneWithConstraint()
   }
 
   onSave() {
@@ -103,12 +125,7 @@ export class ConstraintOptions extends Component {
     this.props.doneWithConstraint(this.constraintToAdd.slice())
   }
 
-  onCancel() {
-    this.props.doneWithConstraint()
-  }
-
   onInputChange(index, value) {
-
     console.log('CHANGE', index, value)
     this.constraintToAdd[1][index] = value;
   }

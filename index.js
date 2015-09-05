@@ -99,7 +99,7 @@ class Toolbar extends React.Component {
 
     function handleClose() {
       if (constraintElement && constraintElement.parentNode) {
-        constraintElement.parentNode.removeChild(constraintElement);
+        React.unmountComponentAtNode(constraintElement);
         submode = 'NONE';
       }
     }
