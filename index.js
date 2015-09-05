@@ -389,9 +389,9 @@ function render () {
     extrusion.bind(extrudeShader);
 
       if (meshHovered && meshHovered.mesh === i) {
-        extrudeShader.uniforms.color = [0.0, 0.0, 1.0, 1]
+        extrudeShader.uniforms.color = [0.0, 0.0, 0.0, 0.45]
       } else {
-        extrudeShader.uniforms.color = [0.0, 0.0, 1.0, 0.75]
+        extrudeShader.uniforms.color = [0.0, 0.0, 0.0, 0.5]
       }
 
       extrudeShader.uniforms.uProjection = projection;
@@ -406,7 +406,7 @@ function render () {
   if (hoveredFace) {
     hoveredFace.bind(extrudeShader);
 
-      extrudeShader.uniforms.color = [1.0, 0.0, 1.0, 0.75]
+      extrudeShader.uniforms.color = [79/255, 192/255, 77/255, 1]
       extrudeShader.uniforms.uProjection = projection;
       extrudeShader.uniforms.uView = view;
       extrudeShader.uniforms.uModel = model;

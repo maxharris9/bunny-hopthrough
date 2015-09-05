@@ -1,5 +1,63 @@
-var intersect = require('ray-triangle-intersection')
 var v3sdist = require('gl-vec3/squaredDistance')
+
+
+var cross = require('gl-vec3/cross');
+var dot = require('gl-vec3/dot');
+var sub = require('gl-vec3/subtract');
+
+var edge1 = [0,0,0];
+var edge2 = [0,0,0];
+var tmp = [0, 0, 0];
+var diff = [0, 0, 0];
+var normal = [0, 0, 0];
+
+function intersect (out, pt, dir, tri) {
+  var a = tri[0];
+  var b = tri[1];
+  var c = tri[2];
+
+  sub(edge1, b, a);
+  sub(edge2, c, a);
+
+  cross(normal, edge1, edge2);
+  var det = dot(dir, normal);
+  var sign;
+
+  if (det > 0) {
+    sign = 1;
+  } else if (det < 0) {
+    sign = -1;
+    det = -det;
+  } else {
+    return null;
+  }
+
+  sub(diff, pt, a)
+
+  var u = sign * dot(dir, cross(tmp, diff, edge2));
+  if ( u < 0 ) {
+    return null;
+  }
+
+  var v = sign * dot(dir, cross(tmp, edge1, diff));
+  if (v < 0 || u + v > det) {
+    return null;
+  }
+
+  var t = -sign * dot(diff, normal);
+  if (t < 0) {
+    return null;
+  }
+
+  var t = t / det;
+
+  out[0] = dir[0] * t + pt[0];
+  out[1] = dir[1] * t + pt[1];
+  out[2] = dir[2] * t + pt[2];
+
+  return out;
+}
+
 
 module.exports = rayMeshIntersection
 

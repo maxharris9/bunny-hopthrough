@@ -44,7 +44,7 @@ function near(a, b, eps) {
 }
 
 function computeCoplanarFaces(simplicialComplex, eps) {
-  eps = eps || 1e-2;
+  eps = eps || 1e-12;
   var faces = simplicialComplex.cells;
   var verts = simplicialComplex.positions;
   var faceNormals = simplicialComplex.faceNormals;
