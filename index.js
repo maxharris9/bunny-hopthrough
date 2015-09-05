@@ -96,8 +96,21 @@ class Toolbar extends React.Component {
     var constraintElement = document.createElement('div');
     constraintElement.id = 'constraints';
     document.body.appendChild(constraintElement);
-    // TODO: allow this to be closed
-    React.render(<ConstraintList constraints={constraints} constrain={constrain} emitter={subModeEmitter} />, constraintElement);
+
+    function handleClose() {
+      if (constraintElement && constraintElement.parentNode) {
+        constraintElement.parentNode.removeChild(constraintElement);
+        submode = 'NONE';
+      }
+    }
+
+    React.render((
+      <ConstraintList
+        constraints={constraints}
+        constrain={constrain}
+        emitter={subModeEmitter}
+        handleClose={handleClose} />
+      ), constraintElement);
   }
 
   onExtrude () {

@@ -39,7 +39,10 @@ export class ConstraintList extends Component {
     } else {
       return (
         <div className='ConstraintList'>
-          <h1>Add Constraint</h1>
+          <h1>
+            Add Constraint
+            <button className='cancel' onClick={this.props.handleClose.bind(this)}>X</button>
+          </h1>
           <OptionList>
           {constraintNames.map((constraintName) => {
             return <li key={constraintName} onClick={this.onAddConstraint.bind(this, constraintName)}>{constraintName}</li>
