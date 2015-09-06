@@ -19,18 +19,6 @@ BinaryTreeNode.prototype.addRightChild = function (data) {
   return this.rightChild;
 };
 
-BinaryTreeNode.prototype.addLeftNode = function (node) {
-  this.leftChild = node;
-
-  return this.leftChild;
-};
-
-BinaryTreeNode.prototype.addRightNode = function (node) {
-  this.rightChild = node;
-
-  return this.rightChild;
-};
-
 BinaryTreeNode.prototype.traverse = function (callback, currentDepth, branch, parentId, done) {
   callback(this.data, this.id, currentDepth, branch, parentId);
 
