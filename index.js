@@ -3,7 +3,16 @@ var Geometry = require('gl-geometry');
 var glShader = require('gl-shader');
 var mat4 = require('gl-mat4');
 var glslify = require('glslify');
-var dot = require('gl-vec3/dot');
+var v3dot = require('gl-vec3/dot');
+var v3add = require('gl-vec3/add');
+var v3scale = require('gl-vec3/scale');
+var v3cross = require('gl-vec3/cross');
+var v3sub = require('gl-vec3/subtract');
+var v3scale = require('gl-vec3/scale');
+var v3norm = require('gl-vec3/normalize');
+var v3copy = require('gl-vec3/copy');
+
+var v3transformMat4 = require('gl-vec3/transformMat4');
 var pick = require('camera-picking-ray');
 var intersect = require('ray-plane-intersection');
 var quad = require('primitive-quad')();
@@ -12,12 +21,15 @@ var fc = require('fc');
 var createSolver = require('2d-constraints-bfgs');
 var constraints = require('2d-constraints-bfgs/constraints');
 var cdt2d = require('cdt2d');
+var triangleNormal = window.triangleNormal = require('triangle-normal');
+var triangleCenter = require('triangle-incenter');
 
 var createMouseRay = require('./modules/create-mouse-ray');
 var rayMeshIntersect = require('./modules/ray-mesh-intersection');
 var extrudePSLG = require('./modules/extrude-pslg');
 var computeCoplanarFaces = require('./modules/compute-coplanar-faces');
 var findHoveredFace = require('./modules/find-hovered-face');
+var createAABB = require('./modules/aabb');
 
 import { ConstraintList, ConstraintOptions } from './constraint-ui'
 import React, { Component } from 'react'
@@ -60,6 +72,7 @@ var submode = 'NONE';
 
 var extrusions = [];
 var meshHovered = false;
+var hoveredFace = false;
 
 class Toolbar extends React.Component {
   panClick () {
@@ -183,20 +196,79 @@ function extrudeSketch(d) {
     var pslg = paths.toPSLG();
 
     var extrusion = extrudePSLG(pslg, sketchPlane.normal, d);
-
+    var positions = extrusion.positions;
     var extrudedGeometry = Geometry(gl);
-    extrudedGeometry.attr('aPosition', extrusion.positions);
+    extrudedGeometry.attr('aPosition', positions);
+    extrudedGeometry.attr('aNormal', extrusion.vertexNormals);
     extrudedGeometry.faces(extrusion.cells);
     extrudedGeometry.original = extrusion;
+    extrudedGeometry.normalLines = Geometry(gl)
 
-    extrudedGeometry.coplanarFaces = computeCoplanarFaces(extrusion).map(function(cells) {
+    var normalLineBuffer = [];
+    var normalLineCells = []
+    extrusion.cells.forEach(function(cell, i) {
+      var j = i*2;
+      normalLineCells.push(j)
+      normalLineCells.push(j + 1)
+
+      var center = triangleCenter([
+        positions[cell[0]],
+        positions[cell[1]],
+        positions[cell[2]]
+      ])
+
+      var normal = triangleNormal(
+        positions[cell[0]][0],
+        positions[cell[0]][1],
+        positions[cell[0]][2],
+
+        positions[cell[1]][0],
+        positions[cell[1]][1],
+        positions[cell[1]][2],
+
+        positions[cell[2]][0],
+        positions[cell[2]][1],
+        positions[cell[2]][2]
+      )
+
+      normalLineBuffer.push(center)
+
+      v3add(
+        normal,
+        center,
+        normal
+      )
+
+      normalLineBuffer.push(normal)
+    })
+    extrudedGeometry.normalLines.attr('aPosition', normalLineBuffer)
+    extrudedGeometry.normalLines.faces(normalLineCells);
+
+
+    extrudedGeometry.coplanarFaces = computeCoplanarFaces(extrusion).map(function(triangles) {
+
+      var cells = triangles.map(function(triangleIndex) {
+        return extrusion.cells[triangleIndex];
+      })
+
+      var aabb = createAABB();
+
+      cells.forEach(cell => {
+        aabb(positions[cell[0]])
+        aabb(positions[cell[1]])
+        aabb(positions[cell[2]])
+      })
+
       var faceGeometry = Geometry(gl);
-      faceGeometry.attr('aPosition', extrusion.positions);
+      faceGeometry.attr('aPosition', positions);
       faceGeometry.faces(cells);
       faceGeometry.original = {
-        positions: extrusion.positions,
-        cells: cells
+        positions: positions,
+        cells: cells,
+        aabb: aabb(),
+        triangles: triangles
       };
+      faceGeometry.parent = extrudedGeometry;
       return faceGeometry;
     })
 
@@ -223,20 +295,20 @@ function initSamplePaths () {
 
   l.newPath();
 
-  l.addPoint([0, 0, 0]);
-  l.addPoint([0, 1, 0]);
+  l.addPoint([-1, -1, 0]);
+  l.addPoint([-1, 1, 0]);
   l.addPoint([1, 1, 0]);
-
+  l.addPoint([1, -1, 0]);
   l.closePath();
 
-  l.newPath();
+  // l.newPath();
 
-  l.addPoint([1, 0, 0]);
-  l.addPoint([1.5, 1, 0]);
-  l.addPoint([1.5, 1.5, 0]);
-  l.addPoint([2.5, 0.5, 0]);
+  // l.addPoint([1, 0, 0]);
+  // l.addPoint([1.5, 1, 0]);
+  // l.addPoint([1.5, 1.5, 0]);
+  // l.addPoint([2.5, 0.5, 0]);
 
-  l.closePath();
+  // l.closePath();
 
   return l;
 }
@@ -363,7 +435,7 @@ function render () {
 
   // Enables face culling, which prevents triangles
   // being visible from behind.
-  // gl.enable(gl.CULL_FACE)
+  gl.disable(gl.CULL_FACE)
 
   // Binds the geometry and sets up the shader's attribute
   // locations accordingly.
@@ -385,14 +457,17 @@ function render () {
 
   geometry.unbind();
 
+  gl.enable(gl.CULL_FACE)
+
   extrusions.forEach(function(extrusion, i) {
     extrusion.bind(extrudeShader);
 
-      if (meshHovered && meshHovered.mesh === i) {
-        extrudeShader.uniforms.color = [0.0, 0.0, 0.0, 0.45]
-      } else {
-        extrudeShader.uniforms.color = [0.0, 0.0, 0.0, 0.5]
-      }
+      // Disabled for click-to-focus debugging
+      // if (meshHovered && meshHovered.mesh === i) {
+      //   extrudeShader.uniforms.color = [0.0, 0.0, 0.0, 0.45]
+      // } else {
+      //   extrudeShader.uniforms.color = [0.0, 0.0, 0.0, 0.5]
+      // }
 
       extrudeShader.uniforms.uProjection = projection;
       extrudeShader.uniforms.uView = view;
@@ -400,9 +475,17 @@ function render () {
 
       extrusion.draw(gl.TRIANGLES);
     extrusion.unbind();
+
+    extrusion.normalLines.bind(sketchShader);
+
+      sketchShader.uniforms.uProjection = projection;
+      sketchShader.uniforms.uView = view;
+      sketchShader.uniforms.uModel = model;
+
+      extrusion.normalLines.draw(gl.LINES);
+    extrusion.normalLines.unbind()
   })
 
-  var hoveredFace = findHoveredFace(extrusions, meshHovered);
   if (hoveredFace) {
     hoveredFace.bind(extrudeShader);
 
@@ -428,7 +511,7 @@ function projectMouseToPlane (event) {
     ray.origin,
     ray.direction,
     sketchPlane.normal,
-    -dot(sketchPlane.normal, sketchPlane.origin)
+    -v3dot(sketchPlane.normal, sketchPlane.origin)
   );
 }
 
@@ -494,6 +577,121 @@ function handleMouseDown (event) {
           subModeEmitter.emit('point-selected', paths.paths[foundPoint.pathIndex].vertexes[path.activePoint])
 
         }
+
+        if (hoveredFace) {
+          var aabb = hoveredFace.original.aabb
+
+          var tmp = [0, 0, 0];
+          var diff = [0, 0, 0]
+          var center = [0, 0, 0];
+          var eye = [0, 0, 0];
+
+          // find the center of the bounding box. This will be the origin of
+          // the plane
+          v3add(center, v3scale(tmp, v3sub(diff, aabb[1], aabb[0]), 0.5), aabb[0])
+
+          // TODO: figure out which way is up by using the largest dimension of the aabb
+
+          var projView = mat4.multiply(mat4.create(), view, projection);
+          var triangles = hoveredFace.original.triangles;
+          var normal = hoveredFace.parent.original.faceNormals[triangles[0]];
+          var tri = hoveredFace.parent.original.cells[triangles[0]];
+          var v0 = hoveredFace.parent.original.positions[tri[0]];
+          var v1 = hoveredFace.parent.original.positions[tri[1]];
+          // var v2 = hoveredFace.parent.original.positions[tri[2]];
+
+          // normal = triangleNormal(v0[0], v0[1], v0[2], v1[0], v1[1], v1[2], v2[0], v2[1], v2[2])
+//           // var n1 = triangleNormal(v1[0], v1[1], v1[2], v2[0], v2[1], v2[2], v0[0], v0[1], v0[2])
+//           // var n2 = triangleNormal( v1[0], v1[1], v1[2], v0[0], v0[1], v0[2], v2[0], v2[1], v2[2])
+//           console.log('normals',n0, normal)
+
+//           var tnormal = v3transformMat4([0, 0, 0], normal, projView);
+//           var tv0 = v3transformMat4([0, 0, 0], v0, projView);
+
+// console.log(tnormal)
+          //var ray = createMouseRay({x: width/2, y: width/2 }, width, height, projection, view);
+
+//           var c = v3sub([0, 0, 0], tv0, ray.origin)
+//           var det = v3dot(c, tnormal);
+
+//           console.log(det);
+// console.log('normal', normal)
+          var scale = 5;//(det >= 0) ? 5 : -5
+          v3scale(eye, normal, scale)
+          console.log(eye)
+          v3add(eye, eye, center)
+
+          var daabb = v3sub([0, 0, 0], eye, aabb[0]);
+          console.log('eye', eye)
+          var up = v3cross([0, 0, 0], v3sub(tmp, center, eye), normal);
+          console.log(up);
+          camera.
+          //camera.lookAt(eye, [0, .25, 0], [0, 0, -1])
+return;
+          console.log(center)
+
+
+          /*       ^ - up
+                   |
+              [ ]< - - - - - -> [ ]
+
+          */
+
+          var inormal = v3scale([0, 0, 0], normal, -1);
+          var right = v3cross([0, 0, 0], inormal, v3norm([0, 0, 0], v3sub([0, 0, 0], center, v0)));
+          v3norm(right, right)
+
+          var up = v3cross([0, 0, 0], inormal, right);
+          v3norm(up, up);
+console.log('up', up)
+
+          // var up = v3sub([0, 0, 0], v1, v0)//v3cross([0, 0, 0], ray.origin, center)
+
+
+// from threejs-experiments
+        // var radius = isect.face.ngonHelper.geometry.boundingSphere.radius;
+
+        // var vFOV = camera.fov * Math.PI / 180;        // convert vertical fov to radians
+        // var maintainDistance = 2.5 * Math.tan( vFOV / 2 ) * radius;
+
+        // this.targetPosition = isect.face.normal.clone()
+        //                                        .multiplyScalar(maintainDistance)
+        //                                        .add(isect.face.ngonHelper.position)
+        //                                        .add(isect.object.position);
+
+        // this.targetCenter = isect.object.position.clone().add(isect.face.ngonHelper.position);
+// end
+
+          // camera.lookAt(eye, center, right)
+          var ieye = v3norm([0, 0, 0], eye);
+          console.error(ieye)
+
+          function quatFromVec(out, da) {
+            var x = da[0]
+            var y = da[1]
+            var z = da[2]
+            var s = x*x + y*y
+            if(s > 1.0) {
+              s = 1.0
+            }
+            out[0] = -da[0]
+            out[1] =  da[1]
+            out[2] =  da[2] || Math.sqrt(1.0 - s)
+            out[3] =  0.0
+          }
+
+          quatFromVec(camera.rotation, eye);
+console.log('rotation', camera.rotation)
+          camera.rotation[0] = ieye[0];
+          camera.rotation[1] = ieye[1];
+          camera.rotation[2] = ieye[2];
+          camera.rotation[3] = 0;
+
+          v3copy(camera.center, center)
+          camera.distance = 5;
+          gl.dirty()
+        }
+
       break;
     }
   }
@@ -513,6 +711,7 @@ function handleMouseUp () {
 function handleMouseMove (event) {
   var mouse3 = projectMouseToPlane(event);
   meshHovered = mousePickFace(event);
+  hoveredFace = findHoveredFace(extrusions, meshHovered);
 
   if (mouse3) {
     switch (mode) {
@@ -537,7 +736,6 @@ function handleMouseMove (event) {
       break;
 
       default:
-        console.log('mode not handled:', mode);
       break;
     }
   }
