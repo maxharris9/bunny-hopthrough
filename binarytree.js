@@ -9,12 +9,12 @@ function BinaryTree (root) {
 BinaryTree.prototype.reparent = function (binaryTreeNode, op, side) {
   var tmp = new BinaryTreeNode(op);
 
-  if (side === 0) {
+  if (side === BinaryTree.LEFT) {
     tmp.leftChild = this.root;
     tmp.rightChild = binaryTreeNode;
     this.root = tmp;
   }
-  else if (side === 1) {
+  else if (side === BinaryTree.RIGHT) {
     tmp.leftChild = binaryTreeNode;
     tmp.rightChild = this.root;
     this.root = tmp;
@@ -39,7 +39,7 @@ BinaryTree.prototype.render = function (testcb) {
   );
 };
 
-BinaryTree.prototype.LEFT = 0;
-BinaryTree.prototype.RIGHT = 1;
+BinaryTree.LEFT = 0;
+BinaryTree.RIGHT = 1;
 
 module.exports = BinaryTree;
