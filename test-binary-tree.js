@@ -21,7 +21,7 @@ tape('', function (t) {
     );
   });
 
-  bt.reparent(fishBite, '+', bt.RIGHT);
+  bt.reparent(fishBite, '+', BinaryTree.RIGHT);
   bt.render(function (lines) {
     t.deepEquals(lines,
       [ { data: '+', id: 6, branch: 'ROOT', parentId: 6 },
