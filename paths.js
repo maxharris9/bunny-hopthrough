@@ -3,8 +3,9 @@ var inherits = require('util').inherits;
 var Path = require('./path');
 var poly2pslg = require('poly-to-pslg');
 var cleanPSLG = require('clean-pslg');
-// var overlayPSLG = require('clean-pslg');
+
 var Geometry = require('gl-geometry');
+var winding = require('./modules/path-winding');
 
 function Paths () {
   Emitter.call(this);
@@ -102,10 +103,15 @@ Paths.prototype.toPSLG = function() {
   // TODO: add cache for non-dirty paths
 
   var pslg = poly2pslg(this.paths.map(function(path) {
-    return path.vertexes;
-  }));
+    // TODO: do we need to make a copy?
+    var vertexes = path.vertexes.slice();
 
-  cleanPSLG(pslg.points, pslg.edges);
+    if (vertexes.length > 2 && winding(vertexes) > 0) {
+      vertexes.reverse();
+    }
+
+    return vertexes;
+  }));
 
   return pslg;
 };
