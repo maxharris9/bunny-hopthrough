@@ -67,7 +67,7 @@ function computeCoplanarFaces(simplicialComplex, eps) {
         // If the normals are matching then we have a candidate for
         // a coplanar match
         var face = faces[i]
-        var coplanarFace = coplanar[j][0]
+        var coplanarFace = faces[coplanar[j][0]]
 
         var res = facesAreCoplanar(
           verts[face[0]],
@@ -79,7 +79,7 @@ function computeCoplanarFaces(simplicialComplex, eps) {
         );
 
         if (res) {
-          coplanar[j].push(face);
+          coplanar[j].push(i);
           combined = true;
           break;
         }
@@ -88,7 +88,7 @@ function computeCoplanarFaces(simplicialComplex, eps) {
 
     if (!combined) {
       coplanarNormals.push(normal1);
-      coplanar.push([faces[i]]);
+      coplanar.push([i]);
     }
   }
 
