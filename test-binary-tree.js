@@ -12,7 +12,7 @@ tape('', function (t) {
   fishBite.addRightChild('triangle');
 
   var bt = new BinaryTree(squircle);
-  bt.render(function (lines) {
+  bt.renderTest(function (lines) {
     t.deepEquals(lines,
       [ { data: '+', id: 0, branch: 'ROOT', parentId: 0 },
         { data: 'square', id: 1, branch: 'L', parentId: 0 },
@@ -22,7 +22,7 @@ tape('', function (t) {
   });
 
   bt.reparent(fishBite, '+', BinaryTree.RIGHT);
-  bt.render(function (lines) {
+  bt.renderTest(function (lines) {
     t.deepEquals(lines,
       [ { data: '+', id: 6, branch: 'ROOT', parentId: 6 },
         { data: '-', id: 3, branch: 'L', parentId: 6 },

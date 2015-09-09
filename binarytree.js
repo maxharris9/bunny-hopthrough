@@ -24,7 +24,7 @@ BinaryTree.prototype.reparent = function (binaryTreeNode, op, side) {
   }
 };
 
-BinaryTree.prototype.render = function (testcb) {
+BinaryTree.prototype.renderTest = function (testcb) {
   var tmp = [];
   this.root.traverse(
     function callback (data, id, currentDepth, branch, parentId) {
