@@ -31,6 +31,11 @@ var computeCoplanarFaces = require('./modules/compute-coplanar-faces');
 var findHoveredFace = require('./modules/find-hovered-face');
 var createAABB = require('./modules/aabb');
 
+var pslg2poly = require('pslg-to-poly');
+
+var BinaryTree = require('./binarytree');
+var BinaryTreeNode = require('./binarytreenode');
+
 import { ConstraintList, ConstraintOptions } from './constraint-ui'
 import React, { Component } from 'react'
 
@@ -294,24 +299,42 @@ function initSamplePaths () {
   var l = new Paths();
 
   l.newPath();
-
-  l.addPoint([-1, -1, 0]);
+  l.addPoint([-2, -1, 0]);
   l.addPoint([-1, 1, 0]);
   l.addPoint([1, 1, 0]);
   l.addPoint([1, -1, 0]);
   l.closePath();
 
-  // l.newPath();
+  l.newPath();
+  l.addPoint([0.5, 0, 0]);
+  l.addPoint([1.5, 1.1, 0]);
+  l.addPoint([1.5, 1.5, 0]);
+  l.addPoint([2.5, 0.5, 0]);
+  l.closePath();
 
-  // l.addPoint([1, 0, 0]);
-  // l.addPoint([1.5, 1, 0]);
-  // l.addPoint([1.5, 1.5, 0]);
-  // l.addPoint([2.5, 0.5, 0]);
-
-  // l.closePath();
+  l.newPath();
+  l.addPoint([ 0.8901147952660535, -2.447353238204074, 0]);
+  l.addPoint([ -0.010354410389857183, -0.4656001673558111, 0]);
+  l.addPoint([ 0.3712552731269356, -0.26782341047477387, 0]);
+  l.addPoint([ 1.843293906596933, -1.484000599356814, 0]);
+  l.closePath();
 
   return l;
 }
+
+var squircle = new BinaryTreeNode('or');
+squircle.addLeftChild(paths.paths[0]);
+squircle.addRightChild(paths.paths[1]);
+
+var bt = new BinaryTree(squircle);
+
+bt.reparent(new BinaryTreeNode(paths.paths[2]), 'xor', BinaryTree.RIGHT);
+
+// var fishBite = new BinaryTreeNode('-');
+// fishBite.addLeftChild('square2');
+// fishBite.addRightChild('triangle');
+
+// bt.reparent(fishBite, '+', BinaryTree.RIGHT);
 
 paths.on('dirty', function(paths) {
   extrusions.map(function(e) {
@@ -452,6 +475,10 @@ function render () {
   // handled in our shaders.
   geometry.draw(gl.TRIANGLES);
   geometry.unbind();
+
+  bt.render(sketchShader, gl, projection, view, model);
+
+return;
 
   paths.render(sketchShader, circleShader, geometry, gl, projection, view, model);
 
