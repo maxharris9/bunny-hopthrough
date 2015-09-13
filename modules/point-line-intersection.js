@@ -14,7 +14,7 @@ function minDistPointLine (testPoint, p1, p2) {
             ( ( testPoint[2] - p1[2] ) * ( p2[2] - p1[2] ) ) ) /
             ( lineMagnitude * lineMagnitude );
   if (u < 0.0 || u > 1.0) {
-    return -1; // closest point does not fall within the line segment
+    return undefined; // closest point does not fall within the line segment
   }
 
   var intersection = [0, 0, 0];
