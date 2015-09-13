@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "budo index.js:bundle.js --dir static --verbose --live | garnish",
-    "test": "tape test*.js"
+    "test": "tape test*.js modules/test*.js"
   },
   "dependencies": {
     "2d-constraints-bfgs": "tmpvar/2d-constraints-bfgs",
