@@ -72,6 +72,21 @@ Paths.prototype.findNearestPoint = function (point, selectionPointRadius) {
   }
 };
 
+Paths.prototype.findNearestLine = function (point, selectionPointRadius) {
+  for (var i = 0; i < this.paths.length; i++) {
+    var result = this.paths[i].findNearestLine(point, selectionPointRadius);
+
+    if ((undefined !== typeof result.distance) && (result.distance < selectionPointRadius)) {
+      return {
+        pathIndex: i,
+        pointIndex0: result.pointIndex0,
+        pointIndex1: result.pointIndex1,
+        distance: result.distance
+      };
+    }
+  }
+};
+
 Paths.prototype.render = function (sketchShader, circleShader, geometry, gl, projection, view, model) {
   for (var i = 0; i < this.paths.length; i++) {
     // TODO: cache sketchGeometry in each path

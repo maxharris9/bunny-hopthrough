@@ -1,4 +1,5 @@
 var distance = require('gl-vec3/distance');
+var minDistPointLine = require('./modules/point-line-intersection')
 
 function Path () {
   // an array of points
@@ -73,6 +74,42 @@ Path.prototype.findNearestPoint = function (point) {
   }
 
   return result;
+};
+
+Path.prototype.findNearestLine = function (point, selectionPointRadius) {
+  var result = {
+    pointIndex0: null,
+    pointIndex1: null,
+    distance: undefined
+  }
+  // if we hit any of the points closely enough, we have a hit
+  var nearest = this.findNearestPoint(point);
+  if (nearest.distance <= selectionPointRadius) {
+    if (nearest.pointIndex === this.vertexes.length - 1) { // if we're at the end, return the last two points
+      result.pointIndex0 = this.vertexes[nearest.pointIndex - 1];
+      result.pointIndex1 = this.vertexes[nearest.pointIndex];
+      result.distance = minDistPointLine(point, result.pointIndex0, result.pointIndex1);
+    }
+    else { // otherwise, return the point + the next point
+      result.pointIndex0 = this.vertexes[nearest.pointIndex];
+      result.pointIndex1 = this.vertexes[nearest.pointIndex + 1];
+      result.distance = minDistPointLine(point, result.pointIndex0, result.pointIndex1);
+    }
+
+    return result;
+  }
+
+  // check all the line segments
+  for (var i = 0; i < this.vertexes.length - 1; i++) {
+    var tmpdist = minDistPointLine(point, this.vertexes[i], this.vertexes[i + 1]);
+    if ((result.distance === undefined) || (tmpdist < result.distance)) {
+      result.pointIndex0 = this.vertexes[i];
+      result.pointIndex1 = this.vertexes[i + 1];
+      result.distance = tmpdist;
+    }
+  }
+
+  return result
 };
 
 Path.prototype.dump = function () {
