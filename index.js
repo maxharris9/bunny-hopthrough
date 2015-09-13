@@ -829,6 +829,12 @@ capture({ audio: true, video: false }, {}, function(err, localStream) {
 
   connection.on('call:started', function(id, pc, data) {
     console.log('new person')
+    attach(pc.getRemoteStreams()[0], {}, function(err, el) {
+      if (err) return;
+
+      el.dataset.peer = id;
+      document.body.appendChild(el);
+    });
   })
 
   connection.on('call:ended', function(id) {
