@@ -1,4 +1,9 @@
-module.exports = TreeNode;
+module.exports = createTreeNode;
+module.exports.TreeNode = TreeNode;
+
+function createTreeNode(parent) {
+  return new TreeNode(parent);
+}
 
 function TreeNode(parent) {
   this.parent = parent;
@@ -18,6 +23,18 @@ TreeNode.prototype.removeChild = function removeChild(child) {
   return this;
 }
 
+TreeNode.prototype.path = function collectPath() {
+  var loc = this;
+  var result = [];
+
+  do {
+    result.unshift(loc);
+    loc = loc.parent;
+  } while (loc);
+
+  return result;
+}
+
 TreeNode.prototype.visit = function visitChildren(fn) {
   fn(this);
 
@@ -30,4 +47,3 @@ TreeNode.prototype.visit = function visitChildren(fn) {
     }
   }
 }
-
