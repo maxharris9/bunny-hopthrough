@@ -811,7 +811,8 @@ rstream.on('end', function() {
 
 var quickconnect = require('rtc-quickconnect');
 var capture = require('rtc-capture');
-var attach = require('rtc-attach')
+var attach = require('rtc-attach');
+var freeice = require('freeice');
 
 capture({ audio: true, video: false }, {}, function(err, localStream) {
   if (err) {
@@ -823,7 +824,11 @@ capture({ audio: true, video: false }, {}, function(err, localStream) {
   //   document.body.appendChild(el);
   // });
 
-  var connection = quickconnect('http://livecad.wtf:3000/', { room: 'bunny-hopthrough' })
+  var connection = quickconnect('http://livecad.wtf:3000/', {
+    room: 'bunny-hopthrough',
+    debug: true,
+    iceServers: freeice()
+  })
   connection.addStream(localStream);
 
 
@@ -833,6 +838,7 @@ capture({ audio: true, video: false }, {}, function(err, localStream) {
       if (err) return;
 
       el.dataset.peer = id;
+      el.setAttribute('controls', "true")
       document.body.appendChild(el);
     });
   })
