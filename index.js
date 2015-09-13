@@ -140,6 +140,10 @@ class Toolbar extends React.Component {
       ), constraintElement);
   }
 
+  selectPathClick () {
+    mode = 'SELECT_PATH';
+  }
+
   onExtrude () {
     extrudeSketch();
   }
@@ -178,6 +182,11 @@ class Toolbar extends React.Component {
         <div style={toolbarButtonStyle} onClick={this.onExtrude} title="Extrude">
           Ex
         </div>
+
+        <div style={toolbarButtonStyle} onClick={this.selectPathClick} title="Path Selection Tool">
+          Pa
+        </div>
+
       </div>
     );
   }
@@ -308,27 +317,29 @@ function initSamplePaths () {
   l.newPath();
   l.addPoint([0.5, 0, 0]);
   l.addPoint([1.5, 1.1, 0]);
-  l.addPoint([1.5, 1.5, 0]);
+//  l.addPoint([1.5, 1.5, 0]);
   l.addPoint([2.5, 0.5, 0]);
   l.closePath();
 
-  l.newPath();
-  l.addPoint([ 0.8901147952660535, -2.447353238204074, 0]);
-  l.addPoint([ -0.010354410389857183, -0.4656001673558111, 0]);
-  l.addPoint([ 0.3712552731269356, -0.26782341047477387, 0]);
-  l.addPoint([ 1.843293906596933, -1.484000599356814, 0]);
-  l.closePath();
+  // l.newPath();
+  // l.addPoint([ 0.8901147952660535, -2.447353238204074, 0]);
+  // l.addPoint([ -0.010354410389857183, -0.4656001673558111, 0]);
+  // l.addPoint([ 0.3712552731269356, -0.26782341047477387, 0]);
+  // l.addPoint([ 1.843293906596933, -1.484000599356814, 0]);
+  // l.closePath();
 
   return l;
 }
 
+/*
+
 var squircle = new BinaryTreeNode('or');
 squircle.addLeftChild(paths.paths[0]);
-squircle.addRightChild(paths.paths[1]);
+squircle.addRightChild(paths.paths[2]);
 
 var bt = new BinaryTree(squircle);
 
-bt.reparent(new BinaryTreeNode(paths.paths[2]), 'xor', BinaryTree.RIGHT);
+bt.reparent(new BinaryTreeNode(paths.paths[1]), 'sub', BinaryTree.RIGHT);
 
 // var fishBite = new BinaryTreeNode('-');
 // fishBite.addLeftChild('square2');
@@ -336,16 +347,19 @@ bt.reparent(new BinaryTreeNode(paths.paths[2]), 'xor', BinaryTree.RIGHT);
 
 // bt.reparent(fishBite, '+', BinaryTree.RIGHT);
 
+
+*/
+
 paths.on('dirty', function(paths) {
   extrusions.map(function(e) {
     e.dispose();
   });
   extrusions.length = 0;
-  extrudeSketch(.5);
+//  extrudeSketch(.5);
   gl.dirty();
 })
 
-extrudeSketch(.5);
+//extrudeSketch(.5);
 
 window.paths = paths;
 window.constrain = constrain;
@@ -476,9 +490,7 @@ function render () {
   geometry.draw(gl.TRIANGLES);
   geometry.unbind();
 
-  bt.render(sketchShader, gl, projection, view, model);
-
-return;
+//  bt.render(sketchShader, gl, projection, view, model);
 
   paths.render(sketchShader, circleShader, geometry, gl, projection, view, model);
 
@@ -584,6 +596,10 @@ function handleMouseDown (event) {
         gl.dirty();
       break;
 
+      case 'SELECT_PATH':
+        console.log('nearest path:', paths.findNearestLine(mouse3, 0.1));
+      break;
+
       case 'TWEAK': // jshint ignore:line
       default:
         var foundPoint = paths.findNearestPoint(mouse3, selectionPointRadius);
@@ -606,6 +622,7 @@ function handleMouseDown (event) {
         }
 
         if (hoveredFace) {
+return;
           var aabb = hoveredFace.original.aabb
 
           var tmp = [0, 0, 0];
@@ -654,7 +671,6 @@ function handleMouseDown (event) {
           console.log(up);
           camera.
           //camera.lookAt(eye, [0, .25, 0], [0, 0, -1])
-return;
           console.log(center)
 
 
