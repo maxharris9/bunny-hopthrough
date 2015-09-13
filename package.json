@@ -54,6 +54,9 @@
     "triangle-normal": "0.0.0"
   },
   "devDependencies": {
+    "rtc-attach": "^2.0.1",
+    "rtc-capture": "^1.0.2",
+    "rtc-quickconnect": "^4.3.3",
     "tape": "^4.0.1"
   }
 }

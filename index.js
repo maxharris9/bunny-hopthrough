@@ -789,3 +789,50 @@ function enterTweakMode () {
   }
   mode = 'TWEAK';
 };
+
+
+// =========== Dirty Hyperlog / WebRTC hacks ================
+
+var hyperlog = require('hyperlog');
+
+var levelup = require('levelup')
+var db = levelup('/some/location', { db: require('memdown') })
+
+var log = hyperlog(db);
+var rstream = log.replicate({ live: true });
+
+rstream.on('data', function() {
+  console.log('replicate')
+})
+
+rstream.on('end', function() {
+  console.log('replication ended')
+})
+
+var quickconnect = require('rtc-quickconnect');
+var capture = require('rtc-capture');
+var attach = require('rtc-attach')
+
+capture({ audio: true, video: false }, {}, function(err, localStream) {
+  if (err) {
+    return console.error('could not capture media: ', err);
+  }
+
+  // render the local media
+  // attach(localStream, { }, function(err, el) {
+  //   document.body.appendChild(el);
+  // });
+
+  var connection = quickconnect('http://livecad.wtf:3000/', { room: 'bunny-hopthrough' })
+  connection.addStream(localStream);
+
+
+  connection.on('call:started', function(id, pc, data) {
+    console.log('new person')
+  })
+
+  connection.on('call:ended', function(id) {
+    console.log('ended')
+  });
+});
+
