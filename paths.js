@@ -99,6 +99,7 @@ Paths.prototype.render = function (sketchShader, circleShader, geometry, gl, pro
     sketchShader.uniforms.uProjection = projection;
     sketchShader.uniforms.uView = view;
     sketchShader.uniforms.uModel = model;
+    sketchShader.uniforms.color = (this.activePath === i) ? [0.0, 1, 0, 1.0] : [0.0, 0.0, 0.0, 1.0];
     gl.lineWidth(1);
     sketchGeometry.draw(gl.LINES);
 

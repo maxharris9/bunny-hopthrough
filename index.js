@@ -597,7 +597,11 @@ function handleMouseDown (event) {
       break;
 
       case 'SELECT_PATH':
-        console.log('nearest path:', paths.findNearestLine(mouse3, 0.1));
+        var nearest = paths.findNearestLine(mouse3, 0.1);
+
+        if (nearest) {
+          paths.setActivePath(nearest.pathIndex);
+        }
       break;
 
       case 'TWEAK': // jshint ignore:line
