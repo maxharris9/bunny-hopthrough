@@ -3,27 +3,48 @@ var inherits = require('util').inherits;
 var Path = require('./path');
 var poly2pslg = require('poly-to-pslg');
 var cleanPSLG = require('clean-pslg');
+var Timestep = require('timestep');
 
 var Geometry = require('gl-geometry');
 var winding = require('./modules/path-winding');
 
 function Paths () {
-  Emitter.call(this);
+  this.database = new Timestep();
+  this.paths = this.database.val('paths', []);
 
-  this.paths = [];
+  this.emitter = new Emitter();
 
   // TODO: make this into a reference to selection
   // object which contains: [pointIndex, pointIndex2, pointIndex3...]
   this.activePath = -1;
 }
 
-inherits(Paths, Emitter);
+Paths.prototype.applyUpdate = function(array) {
+  var time = array[0];
+  var path = array[1];
+  var op = array[2];
+  var val = array[3];
+
+  var pathParts = path.split('/');
+
+  // mutate a path
+  if (pathParts.length === 1) {
+    if (op === '+') {
+      console.error('ADD PATH')
+    } else {
+
+    }
+  } else {
+
+  }
+}
 
 Paths.prototype.newPath = function () {
-  var p = new Path();
-  this.paths.push(p);
-
-  this.activePath = this.paths.length - 1;
+  this.activePath = this.database.val('paths').length;
+  var ns = 'paths/' + this.activePath;
+  // TODO: give paths a unique ID
+  var p = new Path(ns, this.database);
+  this.database.val(ns, p);
 };
 
 Paths.prototype.setActivePath = function (pathIndex) {
@@ -32,24 +53,24 @@ Paths.prototype.setActivePath = function (pathIndex) {
 
 Paths.prototype.addPoint = function (point) {
   var p = this.paths[this.activePath].addPoint(point);
-  this.emit('dirty', this);
+  this.emitter.emit('dirty', this);
   return p;
 };
 
 Paths.prototype.closePath = function () {
   this.paths[this.activePath].closePath();
-  this.emit('dirty', this);
+  this.emitter.emit('dirty', this);
 };
 
 Paths.prototype.openPath = function () {
   this.paths[this.activePath].openPath();
-  this.emit('dirty', this);
+  this.emitter.emit('dirty', this);
 };
 
 Paths.prototype.mutatePoint = function (point) {
   if (this.activePath > -1) {
     this.paths[this.activePath].mutatePoint(point);
-    this.emit('dirty', this);
+    this.emitter.emit('dirty', this);
   }
 };
 
@@ -77,7 +98,7 @@ Paths.prototype.render = function (sketchShader, circleShader, geometry, gl, pro
     // TODO: cache sketchGeometry in each path
     var sketchGeometry = Geometry(gl);
 
-    sketchGeometry.attr('aPosition', this.paths[i].getVertexes());
+    sketchGeometry.attr('aPosition', this.paths[i].getVertices());
     sketchGeometry.faces(this.paths[i].getFaces(), { size: 2 });
 
     sketchGeometry.bind(sketchShader);
@@ -104,13 +125,13 @@ Paths.prototype.toPSLG = function() {
 
   var pslg = poly2pslg(this.paths.map(function(path) {
     // TODO: do we need to make a copy?
-    var vertexes = path.vertexes.slice();
+    var verts = path.getVertices().slice();
 
-    if (vertexes.length > 2 && winding(vertexes) > 0) {
-      vertexes.reverse();
+    if (verts.length > 2 && winding(verts) > 0) {
+      verts.reverse();
     }
 
-    return vertexes;
+    return verts;
   }));
 
   return pslg;

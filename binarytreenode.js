@@ -28,7 +28,7 @@ BinaryTreeNode.prototype.isLeaf = function () {
 
 BinaryTreeNode.prototype.csg = function () {
   if (this.isLeaf()) {
-    return poly2pslg(this.data.vertexes.map(function (item) { return [item[0], item[1]]; }));
+    return poly2pslg(this.data.getVertices().map(function (item) { return [item[0], item[1]]; }));
   }
   else {
     var left = this.leftChild.csg();

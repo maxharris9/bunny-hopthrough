@@ -336,7 +336,7 @@ bt.reparent(new BinaryTreeNode(paths.paths[2]), 'xor', BinaryTree.RIGHT);
 
 // bt.reparent(fishBite, '+', BinaryTree.RIGHT);
 
-paths.on('dirty', function(paths) {
+paths.emitter.on('dirty', function(paths) {
   extrusions.map(function(e) {
     e.dispose();
   });
@@ -478,11 +478,12 @@ function render () {
 
   bt.render(sketchShader, gl, projection, view, model);
 
-return;
+
 
   paths.render(sketchShader, circleShader, geometry, gl, projection, view, model);
 
   geometry.unbind();
+return;
 
   gl.enable(gl.CULL_FACE)
 
@@ -601,11 +602,11 @@ function handleMouseDown (event) {
 
           mode = 'POINTMOVING';
 
-          subModeEmitter.emit('point-selected', paths.paths[foundPoint.pathIndex].vertexes[path.activePoint])
+          subModeEmitter.emit('point-selected', paths.paths[foundPoint.pathIndex].getVertices()[path.activePoint])
 
         }
 
-        if (hoveredFace) {
+        if (hoveredFace && false) {
           var aabb = hoveredFace.original.aabb
 
           var tmp = [0, 0, 0];
@@ -654,7 +655,7 @@ function handleMouseDown (event) {
           console.log(up);
           camera.
           //camera.lookAt(eye, [0, .25, 0], [0, 0, -1])
-return;
+
           console.log(center)
 
 
@@ -750,7 +751,7 @@ function handleMouseMove (event) {
       case 'POINTMOVING':
         var path = paths.paths[paths.activePath];
 
-        if (!solver.isPointFixed(path.vertexes[path.activePoint])) {
+        if (!solver.isPointFixed(path.getVertices()[path.activePoint])) {
           paths.mutatePoint(mouse3);
           solver.solve();
           gl.dirty();
@@ -793,58 +794,55 @@ function enterTweakMode () {
 
 // =========== Dirty Hyperlog / WebRTC hacks ================
 
-var hyperlog = require('hyperlog');
-
-var levelup = require('levelup')
-var db = levelup('/some/location', { db: require('memdown') })
-
-var log = hyperlog(db);
-var rstream = log.replicate({ live: true });
-
-rstream.on('data', function() {
-  console.log('replicate')
-})
-
-rstream.on('end', function() {
-  console.log('replication ended')
-})
-
 var quickconnect = require('rtc-quickconnect');
 var capture = require('rtc-capture');
 var attach = require('rtc-attach');
 var freeice = require('freeice');
+var createRTCStream = require('rtc-data-stream');
+var through = require('through');
+var split = require('split');
 
-capture({ audio: true, video: false }, {}, function(err, localStream) {
-  if (err) {
-    return console.error('could not capture media: ', err);
+var connection = quickconnect('http://livecad.wtf:3000/', {
+  room: 'bunny-hopthrough',
+  debug: true,
+  iceServers: freeice()
+})
+
+
+// capture({ audio: true, video: false }, {}, function(err, localStream) {
+//   if (err) {
+//     return console.error('could not capture media: ', err);
+//   }
+//   connection.addStream(localStream);
+// })
+
+connection.createDataChannel('scene')
+connection.on('channel:opened:scene', function(peerId, channel) {
+  channel.onmessage = function(d) {
+    var diff = JSON.parse(d.data);
+    paths.database.op(diff[2], diff[1], diff[3], false)
+    gl.dirty();
   }
 
-  // render the local media
-  // attach(localStream, { }, function(err, el) {
+  paths.database.change(function(delta) {
+    var json = JSON.stringify(delta) + '\n';
+    console.log('writing', json)
+    channel.send(json);
+  })
+})
+
+
+connection.on('call:started', function(id, pc, data) {
+  // attach(pc.getRemoteStreams()[0], {}, function(err, el) {
+  //   if (err) return;
+
+  //   el.dataset.peer = id;
+  //   el.setAttribute('controls', "true")
   //   document.body.appendChild(el);
   // });
+})
 
-  var connection = quickconnect('http://livecad.wtf:3000/', {
-    room: 'bunny-hopthrough',
-    debug: true,
-    iceServers: freeice()
-  })
-  connection.addStream(localStream);
-
-
-  connection.on('call:started', function(id, pc, data) {
-    console.log('new person')
-    attach(pc.getRemoteStreams()[0], {}, function(err, el) {
-      if (err) return;
-
-      el.dataset.peer = id;
-      el.setAttribute('controls', "true")
-      document.body.appendChild(el);
-    });
-  })
-
-  connection.on('call:ended', function(id) {
-    console.log('ended')
-  });
+connection.on('call:ended', function(id) {
+  console.log('ended')
 });
 
