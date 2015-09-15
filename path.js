@@ -104,16 +104,11 @@ Path.prototype.findNearestLine = function (point, selectionPointRadius) {
 
   // check all the line segments
   for (var i = 0; i < count; i++) {
-    var currentVertex = this.vertexes[i];
-    var nextVertex;
-
     // if the path is closed, check the final segment (i.e., the one that connects back to the first vertex)
-    if (this.closed && (i === (this.vertexes.length - 1))) {
-      nextVertex = this.vertexes[0];
-    }
-    else {
-      nextVertex = this.vertexes[i + 1];
-    }
+    var checkLoopClosingSegment = this.closed && (i === (this.vertexes.length - 1));
+
+    var currentVertex = this.vertexes[i];
+    var nextVertex = checkLoopClosingSegment ? this.vertexes[0] : this.vertexes[i + 1];
 
     var tmpdist = minDistPointLine(point, currentVertex, nextVertex);
     if ((result.distance === undefined) || (tmpdist < result.distance)) {
