@@ -627,6 +627,9 @@ function handleMouseDown (event) {
         if (nearest) {
           paths.setActivePath(nearest.pathIndex);
         }
+        else {
+          paths.setActivePath(undefined);
+        }
       break;
 
       case 'TWEAK': // jshint ignore:line

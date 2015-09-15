@@ -99,12 +99,27 @@ Path.prototype.findNearestLine = function (point, selectionPointRadius) {
     return result;
   }
 
+  // in an open path, only iterate over n - 1 line segments
+  var count = this.closed ? this.vertexes.length : this.vertexes.length - 1;
+
   // check all the line segments
-  for (var i = 0; i < this.vertexes.length - 1; i++) {
-    var tmpdist = minDistPointLine(point, this.vertexes[i], this.vertexes[i + 1]);
+  for (var i = 0; i < count; i++) {
+    var currentVertex;
+    var nextVertex;
+
+    if (this.closed && (i === (count - 1))) {
+      currentVertex = this.vertexes[i];
+      nextVertex = this.vertexes[0];
+    }
+    else {
+      currentVertex = this.vertexes[i];
+      nextVertex = this.vertexes[i + 1];
+    }
+
+    var tmpdist = minDistPointLine(point, currentVertex, nextVertex);
     if ((result.distance === undefined) || (tmpdist < result.distance)) {
-      result.pointIndex0 = this.vertexes[i];
-      result.pointIndex1 = this.vertexes[i + 1];
+      result.pointIndex0 = currentVertex;
+      result.pointIndex1 = nextVertex;
       result.distance = tmpdist;
     }
   }
