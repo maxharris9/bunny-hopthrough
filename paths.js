@@ -87,7 +87,7 @@ Paths.prototype.findNearestLine = function (point, selectionPointRadius) {
   }
 };
 
-Paths.prototype.render = function (sketchShader, circleShader, geometry, gl, projection, view, model) {
+Paths.prototype.render = function (sketchShader, circleShader, geometry, gl, projection, view, model, drawPoints) {
   for (var i = 0; i < this.paths.length; i++) {
     // TODO: cache sketchGeometry in each path
     var sketchGeometry = Geometry(gl);
@@ -108,7 +108,7 @@ Paths.prototype.render = function (sketchShader, circleShader, geometry, gl, pro
     sketchGeometry.unbind();
 
     geometry.bind(circleShader);
-    this.paths[i].render(circleShader, geometry, gl, projection, view, model);
+    this.paths[i].render(circleShader, geometry, gl, projection, view, model, drawPoints);
     geometry.unbind();
   }
 };

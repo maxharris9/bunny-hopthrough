@@ -517,7 +517,8 @@ function render () {
 
 //  bt.render(sketchShader, gl, projection, view, model);
 
-  paths.render(sketchShader, circleShader, geometry, gl, projection, view, model);
+  var showVertexDraggingPoints = mode === 'TWEAK' || mode === 'POINTMOVING';
+  paths.render(sketchShader, circleShader, geometry, gl, projection, view, model, showVertexDraggingPoints);
 
   geometry.unbind();
 
@@ -836,4 +837,5 @@ function enterTweakMode () {
     paths.emit('dirty');
   }
   mode = 'TWEAK';
+  gl.dirty();
 };

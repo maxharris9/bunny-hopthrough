@@ -45,7 +45,7 @@ Path.prototype.openPath = function () {
   this.closed = false;
 };
 
-Path.prototype.render = function (circleShader, geometry, gl, projection, view, model) {
+Path.prototype.render = function (circleShader, geometry, gl, projection, view, model, drawPoints) {
   for (var i = 0; i < this.vertexes.length; i++) {
     circleShader.uniforms.uProjection = projection;
     circleShader.uniforms.uView = view;
@@ -53,7 +53,9 @@ Path.prototype.render = function (circleShader, geometry, gl, projection, view, 
     circleShader.uniforms.uTranslate = this.vertexes[i];
     circleShader.uniforms.color1 = (this.activePoint === i) ? [0.0, 1, 0, 1.0] : [0.0, 0.0, 0.0, 1.0];
 
-    geometry.draw(gl.TRIANGLES);
+    if (drawPoints) {
+      geometry.draw(gl.TRIANGLES);
+    }
   }
 };
 
