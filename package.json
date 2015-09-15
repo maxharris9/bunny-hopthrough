@@ -34,6 +34,7 @@
     "glsl-aastep": "^1.0.1",
     "glslify": "^2.2.1",
     "key-pressed": "0.0.1",
+    "merge": "^1.2.0",
     "mouse-position": "^1.0.0",
     "mouse-pressed": "0.0.1",
     "normals": "^0.1.0",

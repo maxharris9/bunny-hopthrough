@@ -41,6 +41,7 @@ import React, { Component } from 'react'
 
 var subModeEmitter = new EventEmitter();
 var Paths = require('./paths');
+var merge = require('merge');
 
 var sketchPlane = {
   normal: [0, 0, 1],
@@ -72,6 +73,11 @@ var toolbarButtonStyle = {
   zIndex: 1
 };
 
+var selectedToolbarButtonStyle = merge(true, toolbarButtonStyle, {
+  textShadow: '0px 0px 3px #FFFFFF',
+  color: 'white'
+});
+
 var mode = 'NONE';
 var submode = 'NONE';
 
@@ -80,20 +86,37 @@ var meshHovered = false;
 var hoveredFace = false;
 
 class Toolbar extends React.Component {
+  constructor (props) {
+    super(props);
+    this.state = {
+      mode: 'NONE'
+    };
+
+    this.panClick = this.panClick.bind(this);
+    this.arrowClick = this.arrowClick.bind(this);
+    this.drawClick = this.drawClick.bind(this);
+    this.newPathClick = this.newPathClick.bind(this);
+    this.selectPathClick = this.selectPathClick.bind(this);
+  }
+
   panClick () {
     mode = 'NONE';
+    this.setState({mode:'NONE'});
   }
 
   arrowClick () {
     enterTweakMode();
+    this.setState({mode:'TWEAK'});
   }
 
   drawClick () {
     mode = 'DRAW';
+    this.setState({mode:'DRAW'});
   }
 
   newPathClick () {
     mode = 'NEWPATH';
+    this.setState({mode:'NEWPATH'});
     // don't cancel here so the global mouse handler can properly setup
     // the new path.
   }
@@ -142,6 +165,7 @@ class Toolbar extends React.Component {
 
   selectPathClick () {
     mode = 'SELECT_PATH';
+    this.setState({mode:'SELECT_PATH'});
   }
 
   onExtrude () {
@@ -152,21 +176,22 @@ class Toolbar extends React.Component {
     // TODO: redraw the nice SVG arrow
     return (
       <div style={toolbarStyle}>
-        <div style={toolbarButtonStyle} onClick={this.panClick} title="Pan">
+        <div style={this.state.mode === 'NONE' ? selectedToolbarButtonStyle : toolbarButtonStyle} onClick={this.panClick} title="Pan">
           P
         </div>
-        <div style={toolbarButtonStyle} onClick={this.arrowClick} title="Arrow">
-          <svg enable-background="new 0 0 24 24" id="Layer_1" version="1.0" viewBox="0 0 24 24" width="20" height="20">
-            <path d="M7,2l12,11.2l-5.8,0.5l3.3,7.3l-2.2,1l-3.2-7.4L7,18.5V2"/>
+        <div style={toolbarButtonStyle} onClick={this.arrowClick} title='Arrow'>
+          <svg enableBackground='new 0 0 24 24' id='Layer_1' version='1.0' viewBox='0 0 24 24' width='20' height='20'>
+            <path d='M7,2l12,11.2l-5.8,0.5l3.3,7.3l-2.2,1l-3.2-7.4L7,18.5V2' fill={this.state.mode === 'TWEAK' ? 'white' : 'black'}
+              filter='url(#arrowBlur)'/>
           </svg>
         </div>
-        <div style={toolbarButtonStyle} onClick={this.drawClick} title="Polyline">
+        <div style={this.state.mode === 'DRAW' ? selectedToolbarButtonStyle : toolbarButtonStyle} onClick={this.drawClick} title='Polyline'>
           D
         </div>
-        <div style={toolbarButtonStyle} onClick={this.newPathClick} title="New Path">
+        <div style={this.state.mode === 'NEWPATH' ? selectedToolbarButtonStyle : toolbarButtonStyle} onClick={this.newPathClick} title='New Path'>
           N
         </div>
-        <div style={toolbarButtonStyle} onClick={this.deletePointClick} title="Delete selected point">
+        <div style={toolbarButtonStyle} onClick={this.deletePointClick} title='Delete selected point'>
           X
         </div>
 
@@ -183,7 +208,7 @@ class Toolbar extends React.Component {
           Ex
         </div>
 
-        <div style={toolbarButtonStyle} onClick={this.selectPathClick} title="Path Selection Tool">
+        <div style={this.state.mode === 'SELECT_PATH' ? selectedToolbarButtonStyle : toolbarButtonStyle} onClick={this.selectPathClick} title="Path Selection Tool">
           Pa
         </div>
 
