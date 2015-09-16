@@ -55,6 +55,10 @@ toolbarEvents.on('toolbarMode', function (newMode, newSubmode) {
   gl.dirty();
 });
 
+toolbarEvents.on('redraw', function () {
+  gl.dirty();
+});
+
 var extrusions = [];
 var meshHovered = false;
 var hoveredFace = false;

@@ -201,7 +201,7 @@ function constrain(name, args) {
       solver.remove(insert);
       console.error('the system became overconstrained when `%s` was added. It has been automatically removed', name);
     } else {
-      gl.dirty();
+      toolbarEvents.emit('redraw');
     }
   } catch (e) {
     console.error('invalid arguments passed to', name);
