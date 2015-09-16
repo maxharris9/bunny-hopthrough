@@ -1,4 +1,3 @@
-
 var Geometry = require('gl-geometry');
 var glShader = require('gl-shader');
 var mat4 = require('gl-mat4');
@@ -37,11 +36,12 @@ var BinaryTree = require('./binarytree');
 var BinaryTreeNode = require('./binarytreenode');
 
 import { ConstraintList, ConstraintOptions } from './constraint-ui'
-import React, { Component } from 'react'
+import { Tree } from './tree-ui'
+
+import { initToolbar, toolbarEvents } from './toolbar';
 
 var subModeEmitter = new EventEmitter();
 var Paths = require('./paths');
-var merge = require('merge');
 
 var sketchPlane = {
   normal: [0, 0, 1],
@@ -50,182 +50,22 @@ var sketchPlane = {
 
 var solver = createSolver();
 
-var toolbarStyle = {
-  margin: '2px',
-  background: 'orange',
-  width: '25px',
-  position: 'absolute',
-  zIndex: 1,
-  '-o-user-select': 'none',
-  '-moz-user-select': 'none',
-  '-khtml-user-select': 'none',
-  '-webkit-user-select': 'none'
-};
-
-var toolbarButtonStyle = {
-  border: '1px red',
-  background: 'orange',
-  width: '25px',
-  textAlign: 'center',
-  lineHeight: '25px',
-  position: 'relative',
-  cursor: 'pointer',
-  zIndex: 1
-};
-
-var selectedToolbarButtonStyle = merge(true, toolbarButtonStyle, {
-  textShadow: '0px 0px 3px #FFFFFF',
-  color: 'white'
-});
-
 var mode = 'NONE';
 var submode = 'NONE';
+
+var gl = fc(render, false, 3);
+
+toolbarEvents.on('toolbarMode', function (newMode, newSubmode) {
+  mode = newMode;
+  submode = newSubmode;
+  gl.dirty();
+});
 
 var extrusions = [];
 var meshHovered = false;
 var hoveredFace = false;
 
-class Toolbar extends React.Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      mode: 'NONE'
-    };
-
-    this.panClick = this.panClick.bind(this);
-    this.arrowClick = this.arrowClick.bind(this);
-    this.drawClick = this.drawClick.bind(this);
-    this.newPathClick = this.newPathClick.bind(this);
-    this.selectPathClick = this.selectPathClick.bind(this);
-  }
-
-  panClick () {
-    mode = 'NONE';
-    this.setState({mode:'NONE'});
-  }
-
-  arrowClick () {
-    enterTweakMode();
-    this.setState({mode:'TWEAK'});
-  }
-
-  drawClick () {
-    mode = 'DRAW';
-    this.setState({mode:'DRAW'});
-  }
-
-  newPathClick () {
-    mode = 'NEWPATH';
-    this.setState({mode:'NEWPATH'});
-    // don't cancel here so the global mouse handler can properly setup
-    // the new path.
-  }
-
-  deletePointClick () {
-    var aPath = paths.paths[paths.activePath];
-    aPath.vertexes.splice(aPath.activePoint, 1);
-
-    gl.dirty();
-  }
-
-  closePathClick () {
-    paths.closePath();
-
-    gl.dirty();
-  }
-
-  openPathClick () {
-    paths.openPath();
-
-    gl.dirty();
-  }
-
-  addConstraintClick () {
-    submode = 'ADDCONSTRAINT';
-
-    var constraintElement = document.createElement('div');
-    constraintElement.id = 'constraints';
-    document.body.appendChild(constraintElement);
-
-    function handleClose() {
-      if (constraintElement && constraintElement.parentNode) {
-        React.unmountComponentAtNode(constraintElement);
-        submode = 'NONE';
-      }
-    }
-
-    React.render((
-      <ConstraintList
-        constraints={constraints}
-        constrain={constrain}
-        emitter={subModeEmitter}
-        handleClose={handleClose} />
-      ), constraintElement);
-  }
-
-  selectPathClick () {
-    mode = 'SELECT_PATH';
-    this.setState({mode:'SELECT_PATH'});
-  }
-
-  onExtrude () {
-    extrudeSketch();
-  }
-
-  render () {
-    // TODO: redraw the nice SVG arrow
-    return (
-      <div style={toolbarStyle}>
-        <div style={this.state.mode === 'NONE' ? selectedToolbarButtonStyle : toolbarButtonStyle} onClick={this.panClick} title="Pan">
-          P
-        </div>
-        <div style={toolbarButtonStyle} onClick={this.arrowClick} title='Arrow'>
-          <svg enableBackground='new 0 0 24 24' id='Layer_1' version='1.0' viewBox='0 0 24 24' width='20' height='20'>
-            <path d='M7,2l12,11.2l-5.8,0.5l3.3,7.3l-2.2,1l-3.2-7.4L7,18.5V2' fill={this.state.mode === 'TWEAK' ? 'white' : 'black'}
-              filter='url(#arrowBlur)'/>
-          </svg>
-        </div>
-        <div style={this.state.mode === 'DRAW' ? selectedToolbarButtonStyle : toolbarButtonStyle} onClick={this.drawClick} title='Polyline'>
-          D
-        </div>
-        <div style={this.state.mode === 'NEWPATH' ? selectedToolbarButtonStyle : toolbarButtonStyle} onClick={this.newPathClick} title='New Path'>
-          N
-        </div>
-        <div style={toolbarButtonStyle} onClick={this.deletePointClick} title='Delete selected point'>
-          X
-        </div>
-
-        <div style={toolbarButtonStyle} onClick={this.closePathClick} title="Close selected path">
-          Cl
-        </div>
-        <div style={toolbarButtonStyle} onClick={this.openPathClick} title="Open selected path">
-          Op
-        </div>
-        <div style={toolbarButtonStyle} onClick={this.addConstraintClick} title="Add Constraint">
-          C
-        </div>
-        <div style={toolbarButtonStyle} onClick={this.onExtrude} title="Extrude">
-          Ex
-        </div>
-
-        <div style={this.state.mode === 'SELECT_PATH' ? selectedToolbarButtonStyle : toolbarButtonStyle} onClick={this.selectPathClick} title="Path Selection Tool">
-          Pa
-        </div>
-
-      </div>
-    );
-  }
-}
-
 initToolbar();
-
-function initToolbar () {
-  var toolbar = document.createElement('div');
-  toolbar.id = 'toolbar';
-  document.body.appendChild(toolbar);
-
-  React.render(<Toolbar />, document.getElementById('toolbar'));
-}
 
 function extrudeSketch(d) {
   d  = d || parseFloat(prompt('extrude distance?'));
@@ -315,7 +155,6 @@ function extrudeSketch(d) {
   }
 }
 
-var gl = fc(render, false, 3);
 var camera = require('./camera')(gl.canvas, null, gl.dirty);
 
 var geometry = Geometry(gl);
