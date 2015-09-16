@@ -35,12 +35,11 @@ var pslg2poly = require('pslg-to-poly');
 var BinaryTree = require('./binarytree');
 var BinaryTreeNode = require('./binarytreenode');
 
-import { ConstraintList, ConstraintOptions } from './constraint-ui'
+
 import { Tree } from './tree-ui'
 
 import { initToolbar, toolbarEvents } from './toolbar';
 
-var subModeEmitter = new EventEmitter();
 var Paths = require('./paths');
 
 var sketchPlane = {

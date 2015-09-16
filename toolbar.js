@@ -1,6 +1,8 @@
 var EventEmitter = require('events');
 import React, { Component } from 'react'
 var merge = require('merge');
+import { ConstraintList, ConstraintOptions } from './constraint-ui'
+var subModeEmitter = new EventEmitter();
 
 var toolbarEvents = new EventEmitter();
 
@@ -52,6 +54,7 @@ class Toolbar extends React.Component {
     this.drawClick = this.drawClick.bind(this);
     this.newPathClick = this.newPathClick.bind(this);
     this.selectPathClick = this.selectPathClick.bind(this);
+    this.addConstraintClick = this.addConstraintClick.bind(this);
   }
 
   panClick () {
