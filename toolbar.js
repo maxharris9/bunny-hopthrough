@@ -2,7 +2,6 @@ var EventEmitter = require('events');
 import React, { Component } from 'react'
 var merge = require('merge');
 import { ConstraintList, ConstraintOptions } from './constraint-ui'
-var subModeEmitter = new EventEmitter();
 
 var toolbarEvents = new EventEmitter();
 
@@ -106,7 +105,7 @@ class Toolbar extends React.Component {
       <ConstraintList
         constraints={constraints}
         constrain={constrain}
-        emitter={subModeEmitter}
+        emitter={toolbarEvents}
         handleClose={handleClose} />
       ), constraintElement);
   }
@@ -184,5 +183,33 @@ class Toolbar extends React.Component {
   }
 }
 
+var constraints = require('2d-constraints-bfgs/constraints');
+var createSolver = require('2d-constraints-bfgs');
+var solver = createSolver();
+
+window.constrain = constrain;
+function constrain(name, args) {
+  if (!constraints[name]) {
+    console.error('constraint not found:', name);
+    console.error('valid constraint names:', Object.keys(constraints).join(', '));
+    return;
+  }
+  var insert = [constraints[name], args];
+  solver.add(insert);
+  try {
+    if (!solver.solve()) {
+      solver.remove(insert);
+      console.error('the system became overconstrained when `%s` was added. It has been automatically removed', name);
+    } else {
+      gl.dirty();
+    }
+  } catch (e) {
+    console.error('invalid arguments passed to', name);
+    console.error(e.stack)
+    solver.remove(insert);
+  }
+}
+
+exports.solver = solver; // TODO: this doesn't belong here!
 exports.initToolbar = initToolbar;
 exports.toolbarEvents = toolbarEvents;

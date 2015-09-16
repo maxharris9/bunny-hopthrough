@@ -17,8 +17,6 @@ var intersect = require('ray-plane-intersection');
 var quad = require('primitive-quad')();
 var EventEmitter = require('events').EventEmitter;
 var fc = require('fc');
-var createSolver = require('2d-constraints-bfgs');
-var constraints = require('2d-constraints-bfgs/constraints');
 var cdt2d = require('cdt2d');
 var triangleNormal = window.triangleNormal = require('triangle-normal');
 var triangleCenter = require('triangle-incenter');
@@ -35,10 +33,9 @@ var pslg2poly = require('pslg-to-poly');
 var BinaryTree = require('./binarytree');
 var BinaryTreeNode = require('./binarytreenode');
 
-
 import { Tree } from './tree-ui'
 
-import { initToolbar, toolbarEvents } from './toolbar';
+import { initToolbar, toolbarEvents, solver } from './toolbar';
 
 var Paths = require('./paths');
 
@@ -46,8 +43,6 @@ var sketchPlane = {
   normal: [0, 0, 1],
   origin: [0, 0, 0]
 };
-
-var solver = createSolver();
 
 var mode = 'NONE';
 var submode = 'NONE';
@@ -225,28 +220,6 @@ paths.on('dirty', function(paths) {
 //extrudeSketch(.5);
 
 window.paths = paths;
-window.constrain = constrain;
-function constrain(name, args) {
-  if (!constraints[name]) {
-    console.error('constraint not found:', name);
-    console.error('valid constraint names:', Object.keys(constraints).join(', '));
-    return;
-  }
-  var insert = [constraints[name], args];
-  solver.add(insert);
-  try {
-    if (!solver.solve()) {
-      solver.remove(insert);
-      console.error('the system became overconstrained when `%s` was added. It has been automatically removed', name);
-    } else {
-      gl.dirty();
-    }
-  } catch (e) {
-    console.error('invalid arguments passed to', name);
-    console.error(e.stack)
-    solver.remove(insert);
-  }
-}
 
 // Create the base matrices to be used
 // when rendering the quad. Alternatively, can
@@ -488,7 +461,7 @@ function handleMouseDown (event) {
 
           mode = 'POINTMOVING';
 
-          subModeEmitter.emit('point-selected', paths.paths[foundPoint.pathIndex].vertexes[path.activePoint])
+          toolbarEvents.emit('point-selected', paths.paths[foundPoint.pathIndex].vertexes[path.activePoint])
 
         }
 
