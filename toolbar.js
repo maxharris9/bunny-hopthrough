@@ -112,20 +112,20 @@ class Toolbar extends React.Component {
   }
 
   csgTreeClick () {
-    var cesgTreElement = document.createElement('div');
-    cesgTreElement.id = 'csgtree';
-    document.body.appendChild(cesgTreElement);
+    var csgTreeElement = document.createElement('div');
+    csgTreeElement.id = 'csgtree';
+    document.body.appendChild(csgTreeElement);
 
     function handleClose() {
-      if (cesgTreElement && cesgTreElement.parentNode) {
-        React.unmountComponentAtNode(cesgTreElement);
+      if (csgTreeElement && csgTreeElement.parentNode) {
+        React.unmountComponentAtNode(csgTreeElement);
       }
     }
 
     React.render((
       <Tree
         handleClose={handleClose} />
-    ), cesgTreElement);
+    ), csgTreeElement);
   }
 
   selectPathClick () {
