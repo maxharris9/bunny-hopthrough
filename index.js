@@ -79,6 +79,11 @@ function extrudeSketch(d) {
     extrudedGeometry.attr('aNormal', extrusion.vertexNormals);
     extrudedGeometry.faces(extrusion.cells);
     extrudedGeometry.original = extrusion;
+
+    extrudedGeometry.edgeLines = Geometry(gl)
+    extrudedGeometry.edgeLines.attr('aPosition', positions)
+    extrudedGeometry.edgeLines.faces(extrusion.edgeLines, { size: 2 });
+
     extrudedGeometry.normalLines = Geometry(gl)
 
     var normalLineBuffer = [];
@@ -364,6 +369,15 @@ function render () {
 
       extrusion.normalLines.draw(gl.LINES);
     extrusion.normalLines.unbind()
+
+    extrusion.edgeLines.bind(sketchShader);
+      sketchShader.uniforms.color = [0, 0, 0, 1];
+      sketchShader.uniforms.uProjection = projection;
+      sketchShader.uniforms.uView = view;
+      sketchShader.uniforms.uModel = model;
+
+      extrusion.edgeLines.draw(gl.LINES);
+    extrusion.edgeLines.unbind()
   })
 
   if (hoveredFace) {

@@ -9,6 +9,11 @@ var v3scratch = [0, 0, 0];
 var v3multiplier = [0, 0, 0];
 
 function extrudePSLG(pslg, normal, distance) {
+  // triangulate the pslg internally
+  var cells = cdt2d(pslg.points, pslg.edges, { exterior: false })
+  // copy the triangulation edges w/ translation
+  var cellsLength = cells.length;
+
   v3multiplier[0] = distance;
   v3multiplier[1] = distance;
   v3multiplier[2] = distance;
@@ -20,11 +25,13 @@ function extrudePSLG(pslg, normal, distance) {
   var edges = pslg.edges;
   var el = edges.length;
   var faceNormals = [];
+  var edgeLines = pslg.edges.slice().concat(pslg.edges.map(function(p) {
+    return [
+      p[0] + pl,
+      p[1] + pl
+    ]
+  }));
 
-  // triangulate the pslg internally
-  var cells = cdt2d(pslg.points, pslg.edges, { exterior: false })
-  // copy the triangulation edges w/ translation
-  var cellsLength = cells.length;
   for (var i=0; i<cellsLength; i++) {
     cells.push(cells[i].reverse().map(function(a) {
       return a + pl;
@@ -60,8 +67,9 @@ function extrudePSLG(pslg, normal, distance) {
 
     cells.push([a, bpl, apl])
     cells.push([a, b, bpl])
+    edgeLines.push([a, apl])
+    edgeLines.push([b, bpl])
   }
-
   return {
     positions: points,
     cells: cells,
@@ -80,6 +88,7 @@ function extrudePSLG(pslg, normal, distance) {
         points[cell[2]][2]
       )
     }),
-    vertexNormals: normals.vertexNormals(cells, points)
+    vertexNormals: normals.vertexNormals(cells, points),
+    edgeLines: edgeLines
   }
 }
